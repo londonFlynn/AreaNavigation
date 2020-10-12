@@ -44,14 +44,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
     <OutputPath>bin\ARM\Release\</OutputPath>
@@ -91,7 +92,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
+    <OutputPath>bin\x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
@@ -116,19 +117,40 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AccelerometerReading.cs" />
+    <Compile Include="AccelerometerSensor.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="ContructedMap.cs" />
+    <Compile Include="Direction.cs" />
+    <Compile Include="EV3Communication.cs" />
+    <Compile Include="EV3Robot.cs" />
+    <Compile Include="GyroscopeReading.cs" />
+    <Compile Include="GyroscopeSensor.cs" />
+    <Compile Include="IDisplayable.cs" />
     <Compile Include="InfraRedRangeReading.cs" />
+    <Compile Include="ListenToDispalyChanged.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Map.cs" />
+    <Compile Include="NetworkNode.cs" />
+    <Compile Include="PathNetwork.cs" />
+    <Compile Include="PathRoute.cs" />
+    <Compile Include="ProgramManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeReading.cs" />
+    <Compile Include="RangeSensor.cs" />
+    <Compile Include="Robot.cs" />
+    <Compile Include="RoboticCommunication.cs" />
+    <Compile Include="Sensor.cs" />
+    <Compile Include="SensorReading.cs" />
+    <Compile Include="SimulatedCommunication.cs" />
     <Compile Include="SimulatedMap.cs" />
+    <Compile Include="SimulatedRobot.cs" />
     <Compile Include="SimulatedWall.cs" />
+    <Compile Include="SimulationManager.cs" />
     <Compile Include="UltraSonicRangeReading.cs" />
     <Compile Include="ContructedWall.cs" />
     <Compile Include="Wall.cs" />
@@ -159,6 +181,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Lego.Ev3">
+      <Version>1.0.0</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.10</Version>
     </PackageReference>
