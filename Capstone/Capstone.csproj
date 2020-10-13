@@ -135,6 +135,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Map.cs" />
+    <Compile Include="MovementCommandState.cs" />
     <Compile Include="NetworkNode.cs" />
     <Compile Include="PathNetwork.cs" />
     <Compile Include="PathRoute.cs" />

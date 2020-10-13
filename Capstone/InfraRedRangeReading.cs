@@ -1,6 +1,7 @@
 ﻿namespace Capstone
 {
-    public class InfraRedRangeReading : RangeReading
+    public class InfraredRangeReading : RangeReading
     {
+        public InfraredRangeReading(double value) : base(value) { }
     }
 }

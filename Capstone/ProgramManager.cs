@@ -3,7 +3,7 @@
     public class ProgramManager
     {
         protected ContructedMap ContructedMap;
-        protected Robot Robot;
+        public Robot Robot;
         protected MainPage Page;
         public ProgramManager(MainPage page)
         {

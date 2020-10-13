@@ -1,6 +1,7 @@
 ﻿namespace Capstone
 {
-    class UltraSonicRangeReading : RangeReading
+    class UltrasonicRangeReading : RangeReading
     {
+        public UltrasonicRangeReading(double value) : base(value) { }
     }
 }

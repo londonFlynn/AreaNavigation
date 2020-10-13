@@ -1,12 +1,11 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace Capstone
 {
     public class RangeReading : SensorReading
     {
         public Vector<double> SensorPosition;
-        public Vector<double> DistanceVector = new Vector<double>(new double[2]);
+        public readonly Vector<double> DistanceVector;
         public Vector<double> ReadingPosition
         {
             get
@@ -14,6 +13,9 @@ namespace Capstone
                 return SensorPosition + DistanceVector;
             }
         }
-        public DateTime DateTime = DateTime.Now;
+        public RangeReading(double distance)
+        {
+            this.DistanceVector = new Vector<double>(new double[] { distance, 0, 0, 0 });
+        }
     }
 }

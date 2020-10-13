@@ -2,6 +2,7 @@
 using System.Numerics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -94,6 +95,32 @@ namespace Capstone
         public void HearDisplayChanged()
         {
             DisplayItems();
+        }
+        void CanvasKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Left)
+            {
+                ProgramManager.Robot.MovementCommandState = MovementCommandState.LEFT;
+            }
+            else if (e.Key == Windows.System.VirtualKey.Right)
+            {
+                ProgramManager.Robot.MovementCommandState = MovementCommandState.RIGHT;
+            }
+            else if (e.Key == Windows.System.VirtualKey.Up)
+            {
+                ProgramManager.Robot.MovementCommandState = MovementCommandState.FORWARD;
+            }
+            else if (e.Key == Windows.System.VirtualKey.Down)
+            {
+                ProgramManager.Robot.MovementCommandState = MovementCommandState.REVERSE;
+            }
+        }
+        void CanvasKeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Up || e.Key == Windows.System.VirtualKey.Down || e.Key == Windows.System.VirtualKey.Left || e.Key == Windows.System.VirtualKey.Right)
+            {
+                ProgramManager.Robot.MovementCommandState = MovementCommandState.NEUTRAL;
+            }
         }
     }
 }

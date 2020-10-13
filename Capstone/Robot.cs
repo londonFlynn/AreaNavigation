@@ -7,7 +7,7 @@ using Windows.UI.Xaml.Shapes;
 
 namespace Capstone
 {
-    public abstract class Robot : IDisplayable
+    public abstract class Robot : IDisplayable, ISensorReadingSubsriber
     {
         //represents the position of the axis of rotation
         public Vector<double> Position { get; protected set; }
@@ -17,7 +17,18 @@ namespace Capstone
         public double CurrentRotationalSpeed { get; protected set; }
         //represents the edges of the robot relative to its axis of rotation
         protected Vector<double>[] Shape;
-        protected Sensor[] sensors;
+        protected Sensor[] Sensors;
+        private MovementCommandState _movementCommandState = MovementCommandState.NEUTRAL;
+        public MovementCommandState MovementCommandState
+        {
+            get { return _movementCommandState; }
+            set
+            {
+                _movementCommandState = value;
+                RoboticCommunication.CommandMove(_movementCommandState, 1);
+            }
+        }
+
 
         public Robot()
         {
@@ -122,5 +133,16 @@ namespace Capstone
         {
             listeners.Remove(listener);
         }
+
+        public void ReciveSensorReading(Sensor sensor)
+        {
+            if (sensor is RotationSensor)
+                ReciveMotorReading((RotationSensor)sensor);
+        }
+        private void ReciveMotorReading(RotationSensor motor)
+        {
+            this.UpdatePosition();
+        }
+        protected abstract void UpdatePosition();
     }
 }

@@ -11,6 +11,9 @@
     SizeChanged="CurrentWindow_SizeChanged"
     mc:Ignorable="d">
 
-    <Canvas x:Name="MapCanvas" />
+    <Canvas
+        x:Name="MapCanvas"
+        KeyDown="CanvasKeyDown"
+        KeyUp="CanvasKeyUp" />
 
 </Page>
