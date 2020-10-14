@@ -129,7 +129,9 @@
     <Compile Include="GyroscopeReading.cs" />
     <Compile Include="GyroscopeSensor.cs" />
     <Compile Include="IDisplayable.cs" />
-    <Compile Include="InfraRedRangeReading.cs" />
+    <Compile Include="InfraredRangeReading.cs" />
+    <Compile Include="InfraredSensor.cs" />
+    <Compile Include="ISensorReadingSubsriber.cs" />
     <Compile Include="ListenToDispalyChanged.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -145,6 +147,8 @@
     <Compile Include="RangeSensor.cs" />
     <Compile Include="Robot.cs" />
     <Compile Include="RoboticCommunication.cs" />
+    <Compile Include="RotationSensor.cs" />
+    <Compile Include="RotationSensorReading.cs" />
     <Compile Include="Sensor.cs" />
     <Compile Include="SensorReading.cs" />
     <Compile Include="SimulatedCommunication.cs" />
@@ -152,8 +156,9 @@
     <Compile Include="SimulatedRobot.cs" />
     <Compile Include="SimulatedWall.cs" />
     <Compile Include="SimulationManager.cs" />
-    <Compile Include="UltraSonicRangeReading.cs" />
+    <Compile Include="UltrasonicRangeReading.cs" />
     <Compile Include="ContructedWall.cs" />
+    <Compile Include="UltrasonicSensor.cs" />
     <Compile Include="Wall.cs" />
   </ItemGroup>
   <ItemGroup>

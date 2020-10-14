@@ -11,7 +11,6 @@ namespace Capstone
         private InfraredSensor IRSensor;
         private UltrasonicSensor USSensor;
 
-
         protected override void UpdatePosition()
         {
             var movement = (this.LeftMotor.DistanceLastReading + this.RightMotor.DistanceLastReading) / 2;
