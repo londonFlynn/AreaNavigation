@@ -45,5 +45,15 @@
 
   <Capabilities>
     <Capability Name="internetClient" />
+    <DeviceCapability Name="bluetooth.rfcomm">
+      <Device Id="any">
+        <Function Type="name:serialPort" />
+      </Device>
+    </DeviceCapability>
+    <DeviceCapability Name="humaninterfacedevice">
+      <Device Id="vidpid:0694 0005">
+        <Function Type="usage:ff00 0001" />
+      </Device>
+    </DeviceCapability>
   </Capabilities>
 </Package>

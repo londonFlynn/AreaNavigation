@@ -13,16 +13,12 @@ namespace Capstone
         }
         public virtual void SetRecentReading(SensorReading reading)
         {
-            if (ReadingChanged(reading))
+            this.RecentReading = reading;
+            foreach (var subscriber in subscribers)
             {
-                this.RecentReading = reading;
-                foreach (var subscriber in subscribers)
-                {
-                    subscriber.ReciveSensorReading(this);
-                }
+                subscriber.ReciveSensorReading(this);
             }
         }
-        protected abstract bool ReadingChanged(SensorReading changedReading);
         protected List<ISensorReadingSubsriber> subscribers = new List<ISensorReadingSubsriber>();
         public void SubsribeToNewReadings(ISensorReadingSubsriber subsriber)
         {

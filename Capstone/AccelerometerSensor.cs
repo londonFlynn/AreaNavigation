@@ -18,5 +18,14 @@ namespace Capstone
                 subscriber.ReciveSensorReading(this);
             }
         }
+
+        protected override bool ReadingChanged(SensorReading changedReading)
+        {
+            if (this.RecentReading is null)
+                return true;
+            var newReading = changedReading as AccelerometerReading;
+            var oldReading = this.RecentReading as AccelerometerReading;
+            return newReading.Acceleration != oldReading.Acceleration;
+        }
     }
 }

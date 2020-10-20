@@ -7,7 +7,7 @@ using Windows.UI.Xaml.Shapes;
 
 namespace Capstone
 {
-    public abstract class Robot : IDisplayable, ISensorReadingSubsriber
+    public abstract class Robot : ISensorReadingSubsriber, IDisplayable
     {
         //represents the position of the axis of rotation
         public Vector<double> Position { get; protected set; }
@@ -17,7 +17,12 @@ namespace Capstone
         public double CurrentRotationalSpeed { get; protected set; }
         //represents the edges of the robot relative to its axis of rotation
         protected Vector<double>[] Shape;
-        protected Sensor[] Sensors;
+        //protected Sensor[] Sensors;
+        public GyroscopeSensor Gyro { get; protected set; }
+        public RotationSensor LeftMotor { get; protected set; }
+        public RotationSensor RightMotor { get; protected set; }
+        public InfraredSensor IRSensor { get; protected set; }
+        public UltrasonicSensor USSensor { get; protected set; }
         private MovementCommandState _movementCommandState = MovementCommandState.NEUTRAL;
         public MovementCommandState MovementCommandState
         {
@@ -28,8 +33,6 @@ namespace Capstone
                 RoboticCommunication.CommandMove(_movementCommandState, 1);
             }
         }
-
-
         public Robot()
         {
             this.Position = new Vector<double>(new double[] { 0, 0, 0, 0 });
@@ -54,69 +57,115 @@ namespace Capstone
             }
             return result;
         }
-        public void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
+
+        public void ReciveSensorReading(Sensor sensor)
         {
-            var pos = FullRobotPosition();
-            var polygon = new Polygon();
-            polygon.Fill = new SolidColorBrush(Windows.UI.Colors.LightBlue);
+            if (sensor is GyroscopeSensor)
+                ReciveGyroReading((GyroscopeSensor)sensor);
+            if (sensor == this.LeftMotor)
+                reciveLeftMotorReading(sensor as RotationSensor);
+            if (sensor == this.RightMotor)
+                reciveRightMotorReading(sensor as RotationSensor);
+        }
+
+        private void reciveRightMotorReading(RotationSensor rotationSensor)
+        {
+            var movement = this.RightMotor.DistanceLastReading / 2;
+            var moveVector = new Vector<double>(new double[] { 0, movement, 0, 0 });
+            var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
+            var cos = Math.Cos(angle);
+            var sin = Math.Sin(angle);
+            moveVector = new Vector<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
+            this.Position = this.Position + moveVector;
+            this.Orientation = angle;
+            this.UpdatePosition();
+        }
+
+        private void reciveLeftMotorReading(RotationSensor rotationSensor)
+        {
+            var movement = this.LeftMotor.DistanceLastReading / 2;
+            var moveVector = new Vector<double>(new double[] { 0, movement, 0, 0 });
+            var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
+            var cos = Math.Cos(angle);
+            var sin = Math.Sin(angle);
+            moveVector = new Vector<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
+            this.Position = this.Position + moveVector;
+            this.Orientation = angle;
+            this.UpdatePosition();
+        }
+
+        private void ReciveGyroReading(GyroscopeSensor sensor)
+        {
+            this.Orientation = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
+            this.UpdatePosition();
+        }
+        protected abstract void UpdatePosition();
+        public virtual void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
+        {
+            var shape = new Polygon();
+            shape.Fill = new SolidColorBrush(Windows.UI.Colors.LightBlue);
 
             var points = new PointCollection();
-            foreach (var point in pos)
+            foreach (var point in this.FullRobotPosition())
             {
                 points.Add(new Windows.Foundation.Point((point[0] - horizontalOffset) * scale, (point[1] - verticalOffset) * scale));
-
             }
-            polygon.Points = points;
-            panel.Children.Add(polygon);
+            shape.Points = points;
+            panel.Children.Add(shape);
         }
+
         public double TopMostPosition()
         {
             double top = double.MaxValue;
-            foreach (var v in FullRobotPosition())
+            foreach (var point in this.FullRobotPosition())
             {
-                if (v[1] < top)
-                    top = v[1];
+                if (point[1] < top)
+                    top = point[1];
             }
             return top;
         }
         public double RightMostPosition()
         {
             double right = double.MinValue;
-            foreach (var v in FullRobotPosition())
+            foreach (var point in this.FullRobotPosition())
             {
-                if (v[1] > right)
-                    right = v[1];
+                if (point[0] > right)
+                    right = point[0];
             }
             return right;
         }
         public double LeftMostPosition()
         {
             double left = double.MaxValue;
-            foreach (var v in FullRobotPosition())
+            foreach (var point in this.FullRobotPosition())
             {
-                if (v[1] < left)
-                    left = v[1];
+                if (point[0] < left)
+                    left = point[0];
             }
             return left;
         }
         public double BottomMostPosition()
         {
             double bottom = double.MinValue;
-            foreach (var v in FullRobotPosition())
+            foreach (var point in this.FullRobotPosition())
             {
-                if (v[1] > bottom)
-                    bottom = v[1];
+                if (point[1] > bottom)
+                    bottom = point[1];
             }
             return bottom;
         }
+
+
         public double MaxHeight()
         {
             return BottomMostPosition() - TopMostPosition();
         }
+
         public double MaxWidth()
         {
             return RightMostPosition() - LeftMostPosition();
         }
+
         public void NotifyDisplayChanged()
         {
             foreach (var listener in listeners)
@@ -124,6 +173,7 @@ namespace Capstone
                 listener.HearDisplayChanged();
             }
         }
+
         private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
         public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
         {
@@ -133,16 +183,5 @@ namespace Capstone
         {
             listeners.Remove(listener);
         }
-
-        public void ReciveSensorReading(Sensor sensor)
-        {
-            if (sensor is RotationSensor)
-                ReciveMotorReading((RotationSensor)sensor);
-        }
-        private void ReciveMotorReading(RotationSensor motor)
-        {
-            this.UpdatePosition();
-        }
-        protected abstract void UpdatePosition();
     }
 }

@@ -8,14 +8,14 @@ namespace Capstone
         public List<Wall> Walls = new List<Wall>();
 
 
-        public void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
+        public virtual void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
         {
             foreach (Wall wall in Walls)
             {
                 wall.Display(panel, scale, horizontalOffset, verticalOffset);
             }
         }
-        public double TopMostPosition()
+        public virtual double TopMostPosition()
         {
             double top = double.MaxValue;
             foreach (Wall wall in Walls)
@@ -25,7 +25,7 @@ namespace Capstone
             }
             return top;
         }
-        public double RightMostPosition()
+        public virtual double RightMostPosition()
         {
             double right = double.MinValue;
             foreach (Wall wall in Walls)
@@ -35,7 +35,7 @@ namespace Capstone
             }
             return right;
         }
-        public double LeftMostPosition()
+        public virtual double LeftMostPosition()
         {
             double left = double.MaxValue;
             foreach (Wall wall in Walls)
@@ -45,7 +45,7 @@ namespace Capstone
             }
             return left;
         }
-        public double BottomMostPosition()
+        public virtual double BottomMostPosition()
         {
             double bottom = double.MinValue;
             foreach (Wall wall in Walls)

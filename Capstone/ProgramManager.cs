@@ -8,9 +8,10 @@
         public ProgramManager(MainPage page)
         {
             this.Page = page;
-            this.ContructedMap = new ContructedMap();
             this.Robot = new EV3Robot();
-            //Page.AddDisplayItem(ContructedMap);
+            this.ContructedMap = new ContructedMap(Robot);
+            Page.AddDisplayItem(Robot);
+            Page.AddDisplayItem(ContructedMap);
         }
     }
 }

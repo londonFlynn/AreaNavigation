@@ -6,17 +6,21 @@ namespace Capstone
 {
     public class EV3Communication : RoboticCommunication
     {
-        private ICommunication coms;
-        EV3Robot Robot;
+        private Lego.Ev3.Core.ICommunication coms;
+        private GyroscopeSensor Gyro;
+        private RotationSensor LeftMotor;
+        private RotationSensor RightMotor;
+        private InfraredSensor IRSensor;
+        private UltrasonicSensor USSensor;
         private Brick brick;
         private readonly OutputPort leftDrive = OutputPort.B;
         private readonly OutputPort rightDrive = OutputPort.C;
-        public EV3Communication(EV3Robot robot)
+        public EV3Communication()
         {
-            this.Robot = robot;
-            coms = new Lego.Ev3.WinRT.UsbCommunication();
             //coms = new Lego.Ev3.WinRT.BluetoothCommunication();
+            //coms = new Lego.Ev3.WinRT.UsbCommunication();
             //coms = new Lego.Ev3.Desktop.UsbCommunication();
+            coms = new Lego.Ev3.Desktop.BluetoothCommunication("com3");
 
             brick = new Brick(coms);
             brick.BrickChanged += OnBrickChanged;
@@ -50,32 +54,33 @@ namespace Capstone
 
         public async override void CommandMove(MovementCommandState movementCommandState, double power)
         {
+            Debug.WriteLine("Sending move command to EV3");
             double leftPower = 0;
             double rightPower = 0;
             switch (movementCommandState)
             {
                 case MovementCommandState.LEFT:
-                    leftPower = power;
+                    leftPower = -power;
                     rightPower = power;
                     break;
                 case MovementCommandState.RIGHT:
-                    leftPower = -power;
-                    rightPower = -power;
-                    break;
-                case MovementCommandState.FORWARD:
-                    leftPower = -power;
-                    rightPower = power;
-                    break;
-                case MovementCommandState.REVERSE:
                     leftPower = power;
                     rightPower = -power;
                     break;
+                case MovementCommandState.FORWARD:
+                    leftPower = power;
+                    rightPower = power;
+                    break;
+                case MovementCommandState.REVERSE:
+                    leftPower = -power;
+                    rightPower = -power;
+                    break;
             }
-            await brick.DirectCommand.TurnMotorAtPowerForTimeAsync(leftDrive, (int)-(leftPower * 100), 100, false);
-            await brick.DirectCommand.TurnMotorAtPowerForTimeAsync(rightDrive, (int)(rightPower * 100), 100, false);
-            //brick.BatchCommand.TurnMotorAtPower(leftDrive, (int)-(leftPower * 100));
-            //brick.BatchCommand.TurnMotorAtSpeed(rightDrive, (int)(rightPower * 100));
-            //await brick.BatchCommand.SendCommandAsync();
+            //await brick.DirectCommand.TurnMotorAtPowerAsync(leftDrive, (int)-(leftPower * 100));
+            //await brick.DirectCommand.TurnMotorAtPowerAsync(rightDrive, (int)(rightPower * 100));
+            brick.BatchCommand.TurnMotorAtPower(leftDrive, (int)-(leftPower * 100));
+            brick.BatchCommand.TurnMotorAtPower(rightDrive, (int)(rightPower * 100));
+            await brick.BatchCommand.SendCommandAsync();
         }
         void OnBrickChanged(object sender, BrickChangedEventArgs e)
         {
@@ -121,45 +126,59 @@ namespace Capstone
         }
         private void UpdateGyroValue(Port port)
         {
-            if (!(Robot.Gyro is null))
-                Robot.Gyro.SetRecentReading(new GyroscopeReading(-port.RawValue));
+            if (!(this.Gyro is null))
+                this.Gyro.SetRecentReading(new GyroscopeReading(-port.RawValue));
         }
         private void UpdateRotaionSensor(Port port, bool left)
         {
-            if (!(Robot.LeftMotor is null) && !(Robot.RightMotor is null))
+            if (!(this.LeftMotor is null) && !(this.RightMotor is null))
             {
 
                 if (left)
                 {
-                    Robot.LeftMotor.SetRecentReading(new RotationSensorReading(port.RawValue));
+                    LeftMotor.SetRecentReading(new RotationSensorReading(port.RawValue));
                 }
                 else
                 {
-                    Robot.RightMotor.SetRecentReading(new RotationSensorReading(port.RawValue));
+                    RightMotor.SetRecentReading(new RotationSensorReading(port.RawValue));
                 }
             }
         }
         private void UpdateInfraredValue(Port port)
         {
-            if (!(Robot.IRSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
-                Robot.IRSensor.SetRecentReading(
-                    new InfraredRangeReading(
-                        (port.RawValue + 0d) / 10,
-                        Robot.IRSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+            if (!(this.IRSensor is null))
+                IRSensor.SetRecentReading(new InfraredRangeReading(port.RawValue));
         }
         private void UpdateUltrasonicValue(Port port)
         {
-            if (!(Robot.USSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
-                Robot.USSensor.SetRecentReading(
-                    new UltrasonicRangeReading(
-                        (port.RawValue + 0d) / 10,
-                        Robot.USSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+            if (!(this.USSensor is null))
+                USSensor.SetRecentReading(new UltrasonicRangeReading(port.RawValue));
         }
         public override void StartGettingSensorReadings(Sensor sensor)
         {
-
+            if (sensor is UltrasonicSensor)
+            {
+                this.USSensor = (UltrasonicSensor)sensor;
+            }
+            else if (sensor is InfraredSensor)
+            {
+                this.IRSensor = (InfraredSensor)sensor;
+            }
+            else if (sensor is GyroscopeSensor)
+            {
+                this.Gyro = (GyroscopeSensor)sensor;
+            }
+            else if (sensor is RotationSensor)
+            {
+                if (((RotationSensor)sensor).LeftDrive)
+                {
+                    this.LeftMotor = (RotationSensor)sensor;
+                }
+                else
+                {
+                    this.RightMotor = (RotationSensor)sensor;
+                }
+            }
         }
     }
 }

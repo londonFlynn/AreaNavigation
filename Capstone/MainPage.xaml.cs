@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -18,7 +19,9 @@ namespace Capstone
         public MainPage()
         {
             this.InitializeComponent();
-            this.ProgramManager = new SimulationManager(this);
+            this.ProgramManager = new ProgramManager(this);
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
         }
         public void AddDisplayItem(IDisplayable item)
         {
@@ -41,16 +44,24 @@ namespace Capstone
                 windowWidth = 1;
                 windowHeight = 1;
             }
+            double leftMost = double.MaxValue;
+            double rightMost = double.MinValue;
+            double topMost = double.MaxValue;
+            double bottomMost = double.MinValue;
             double maxWidth = 0;
             double maxHeight = 0;
             foreach (IDisplayable item in DisplayedItems)
             {
-                var width = item.MaxWidth();
-                if (width > maxWidth)
-                    maxWidth = width;
-                var height = item.MaxHeight();
-                if (height > maxHeight)
-                    maxHeight = height;
+                var itemLeft = item.LeftMostPosition();
+                var itemRight = item.RightMostPosition();
+                var itemTop = item.TopMostPosition();
+                var itemBottom = item.BottomMostPosition();
+                leftMost = itemLeft < leftMost ? itemLeft : leftMost;
+                rightMost = itemRight > rightMost ? itemRight : rightMost;
+                topMost = itemTop < topMost ? itemTop : topMost;
+                bottomMost = itemBottom > bottomMost ? itemBottom : bottomMost;
+                maxWidth = rightMost - leftMost;
+                maxHeight = bottomMost - topMost;
             }
             var horizontalScale = windowWidth / maxWidth;
             var verticalScale = windowHeight / maxHeight;
@@ -80,7 +91,7 @@ namespace Capstone
             double verticalOffset = offset[1];
             foreach (IDisplayable item in DisplayedItems)
             {
-                item.Display(this.FindName("MapCanvas") as Canvas, scale, verticalOffset, horizontalOffset);
+                item.Display(this.FindName("MapCanvas") as Canvas, scale, horizontalOffset, verticalOffset);
             }
         }
         private void ClearCanvas()
@@ -94,33 +105,57 @@ namespace Capstone
         }
         public void HearDisplayChanged()
         {
-            DisplayItems();
+            //DisplayItems();
         }
-        void CanvasKeyDown(object sender, KeyRoutedEventArgs e)
+
+        private bool UpIsPressed()
         {
-            if (e.Key == Windows.System.VirtualKey.Left)
-            {
-                ProgramManager.Robot.MovementCommandState = MovementCommandState.LEFT;
-            }
-            else if (e.Key == Windows.System.VirtualKey.Right)
-            {
-                ProgramManager.Robot.MovementCommandState = MovementCommandState.RIGHT;
-            }
-            else if (e.Key == Windows.System.VirtualKey.Up)
-            {
-                ProgramManager.Robot.MovementCommandState = MovementCommandState.FORWARD;
-            }
-            else if (e.Key == Windows.System.VirtualKey.Down)
-            {
-                ProgramManager.Robot.MovementCommandState = MovementCommandState.REVERSE;
-            }
+            var keyState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Up);
+            return (keyState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
         }
-        void CanvasKeyUp(object sender, KeyRoutedEventArgs e)
+        private bool DownIsPressed()
         {
-            if (e.Key == Windows.System.VirtualKey.Up || e.Key == Windows.System.VirtualKey.Down || e.Key == Windows.System.VirtualKey.Left || e.Key == Windows.System.VirtualKey.Right)
+            var keyState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Down);
+            return (keyState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+        }
+        private bool LeftIsPressed()
+        {
+            var keyState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Left);
+            return (keyState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+        }
+        private bool RightIsPressed()
+        {
+            var keyState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Right);
+            return (keyState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+        }
+        private void UpdateMovmentState()
+        {
+            MovementCommandState state = MovementCommandState.NEUTRAL;
+            if (UpIsPressed() ^ DownIsPressed())
             {
-                ProgramManager.Robot.MovementCommandState = MovementCommandState.NEUTRAL;
+                state = UpIsPressed() ? MovementCommandState.FORWARD : MovementCommandState.REVERSE;
             }
+            else if (LeftIsPressed() ^ RightIsPressed())
+            {
+                state = LeftIsPressed() ? MovementCommandState.LEFT : MovementCommandState.RIGHT;
+
+            }
+            this.ProgramManager.Robot.MovementCommandState = state;
+        }
+        void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
+        {
+
+            if (IsArrowKey(e.VirtualKey))
+                UpdateMovmentState();
+        }
+        void CoreWindow_KeyUp(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
+        {
+            if (IsArrowKey(e.VirtualKey))
+                UpdateMovmentState();
+        }
+        private bool IsArrowKey(VirtualKey key)
+        {
+            return (key == VirtualKey.Up || key == VirtualKey.Down || key == VirtualKey.Left || key == VirtualKey.Right);
         }
     }
 }
