@@ -14,8 +14,8 @@ namespace Capstone
         public EV3Communication(EV3Robot robot)
         {
             this.Robot = robot;
-            coms = new Lego.Ev3.WinRT.UsbCommunication();
-            //coms = new Lego.Ev3.WinRT.BluetoothCommunication();
+            //coms = new Lego.Ev3.WinRT.UsbCommunication();
+            coms = new Lego.Ev3.WinRT.BluetoothCommunication();
             //coms = new Lego.Ev3.Desktop.UsbCommunication();
 
             brick = new Brick(coms);
@@ -116,6 +116,8 @@ namespace Capstone
                 case OutputPort.D:
                     result = InputPort.D;
                     break;
+                default:
+                    throw new ArgumentException("Output port cannot be mapped to an input port");
             }
             return result;
         }
@@ -144,9 +146,20 @@ namespace Capstone
             if (!(Robot.IRSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
                 Robot.IRSensor.SetRecentReading(
                     new InfraredRangeReading(
-                        (port.RawValue + 0d) / 10,
+                        InfraredDataToCM(port.RawValue),
                         Robot.IRSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
                         (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+        }
+        private double InfraredDataToCM(double data)
+        {
+            if (data <= 38.983)
+            {
+                return 20535640 + ((5.352759 - 20535640) / (1 + Math.Pow(data / 1017575, 1.320567)));
+            }
+            else
+            {
+                return 103623100 + ((14.33844 - 103623100) / (1 + Math.Pow(data / 920.7437, 4.870784)));
+            }
         }
         private void UpdateUltrasonicValue(Port port)
         {

@@ -1,5 +1,4 @@
-﻿using Capstone;
-using Lego.Ev3.Core;
+﻿using Lego.Ev3.Core;
 using System;
 
 namespace RobotCommunicationTestApp
@@ -8,14 +7,14 @@ namespace RobotCommunicationTestApp
     {
         static void Main(string[] args)
         {
-            new EV3Robot();
+            BrickSetup();
             while (true) { }
 
         }
         static async void BrickSetup()
         {
-            var coms = new Lego.Ev3.Desktop.UsbCommunication();
-            var brick = new Brick(coms);
+            //var coms = new Lego.Ev3.Desktop.UsbCommunication();
+            var brick = new Brick(new Lego.Ev3.Desktop.BluetoothCommunication("COM3"));
             brick.BrickChanged += OnBrickChanged;
             Console.WriteLine("Attempting to connect to brick...");
             await brick.ConnectAsync();

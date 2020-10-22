@@ -28,14 +28,7 @@ namespace Capstone
         }
         protected override void UpdatePosition()
         {
-            //var movement = (this.LeftMotor.DistanceLastReading + this.RightMotor.DistanceLastReading) / 2;
-            //var moveVector = new Vector<double>(new double[] { movement, 0, 0, 0 });
-            //var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
-            //var cos = Math.Cos(angle);
-            //var sin = Math.Sin(angle);
-            //moveVector = new Vector<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
-            //this.Position = this.Position + moveVector;
-            //this.Orientation = angle;
+            this.UpdateDisplay();
             Debug.WriteLine($"updating position: X={this.Position[0]}, Y={this.Position[1]}, Angle in Radians = {this.Orientation}");
             this.NotifyDisplayChanged();
         }

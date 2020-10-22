@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Shapes;
 
 namespace Capstone
 {
@@ -19,58 +17,55 @@ namespace Capstone
         {
             if (!RangeReadings.Contains(sensor.GetCurrentReading() as RangeReading))
             {
-                var top = this.TopMostPosition();
-                var bottom = this.BottomMostPosition();
-                var left = this.LeftMostPosition();
-                var right = this.RightMostPosition();
-                RangeReadings.Add(sensor.GetCurrentReading() as RangeReading);
-                var newtop = this.TopMostPosition();
-                var newbottom = this.BottomMostPosition();
-                var newleft = this.LeftMostPosition();
-                var newright = this.RightMostPosition();
-                if (!(panel is null) && top == newtop && bottom == newbottom && left == newleft && right == newright)
-                {
-                    DisplayRangeReading(sensor.GetCurrentReading() as RangeReading);
-                }
-                else
-                {
-                    this.NotifyDisplayChanged();
-                }
+                var reading = sensor.GetCurrentReading() as RangeReading;
+                RangeReadings.Add(reading);
+                reading.SetPanel(panel);
+                reading.SetScale(scale, horizontalOffset, verticalOffset);
+                reading.StartDisplay();
+                this.NotifyDisplayChanged();
             }
+        }
+        public override void SetPanel(Panel panel)
+        {
+            base.SetPanel(panel);
+            foreach (RangeReading reading in RangeReadings)
+            {
+                reading.SetPanel(panel);
+            }
+            this.panel = panel;
+        }
+
+        public override void SetScale(double scale, double horizontalOffset, double verticalOffset)
+        {
+            base.SetScale(scale, horizontalOffset, verticalOffset);
+            foreach (RangeReading reading in RangeReadings)
+            {
+                reading.SetScale(scale, horizontalOffset, verticalOffset);
+            }
+            this.scale = scale;
+            this.horizontalOffset = horizontalOffset;
+            this.verticalOffset = verticalOffset;
         }
         private Panel panel;
         private double scale;
-        private double hoffset;
-        private double voffset;
-        public override void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
+        private double verticalOffset;
+        private double horizontalOffset;
+
+        public override void StartDisplay()
         {
-            this.panel = panel;
-            this.scale = scale;
-            this.hoffset = horizontalOffset;
-            this.voffset = verticalOffset;
             foreach (RangeReading reading in RangeReadings)
             {
-                DisplayRangeReading(reading);
+                reading.StartDisplay();
             }
-            base.Display(panel, scale, horizontalOffset, verticalOffset);
+            base.StartDisplay();
         }
-        private void DisplayRangeReading(RangeReading reading)
+        public override void UpdateDisplay()
         {
-            var line = new Line();
-            line.Stroke = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 15, 15, 15));
-            line.Y1 = (reading.SensorPosition[1] - voffset) * scale;
-            line.X1 = (reading.SensorPosition[0] - hoffset) * scale;
-            line.Y2 = (reading.ReadingPosition[1] - voffset) * scale;
-            line.X2 = (reading.ReadingPosition[0] - hoffset) * scale;
-            panel.Children.Add(line);
-
-            var circle = new Ellipse();
-            circle.Fill = new SolidColorBrush(reading is UltrasonicRangeReading ? Windows.UI.Colors.Green : Windows.UI.Colors.Red);
-            circle.Width = scale;
-            circle.Height = scale;
-            panel.Children.Add(circle);
-            Canvas.SetTop(circle, (reading.ReadingPosition[1] - voffset) * scale - (scale / 2));
-            Canvas.SetLeft(circle, (reading.ReadingPosition[0] - hoffset) * scale - (scale / 2));
+            foreach (RangeReading reading in RangeReadings)
+            {
+                reading.UpdateDisplay();
+            }
+            base.UpdateDisplay();
         }
         public override double TopMostPosition()
         {

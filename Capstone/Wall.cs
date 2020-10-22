@@ -11,21 +11,45 @@ namespace Capstone
         public Vector<double> StartPosition;
         public Vector<double> EndPosition;
 
+
+
+
+        private Line DisplayedLine;
         public double BottomMostPosition()
         {
             return StartPosition[1] > EndPosition[1] ? StartPosition[1] : EndPosition[1];
         }
 
-        public virtual void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
+        public virtual void StartDisplay()
         {
-            var line = new Line();
-            line.Stroke = new SolidColorBrush(Windows.UI.Colors.White);
-            line.X1 = (StartPosition[0] - horizontalOffset) * scale;
-            line.Y1 = (StartPosition[1] - verticalOffset) * scale;
-            line.X2 = (EndPosition[0] - horizontalOffset) * scale;
-            line.Y1 = (EndPosition[1] - verticalOffset) * scale;
-            panel.Children.Add(line);
+            DisplayedLine = new Line();
+            DisplayedLine.Stroke = new SolidColorBrush(Windows.UI.Colors.White);
+            UpdateDisplay();
+            panel.Children.Add(DisplayedLine);
         }
+        public virtual void UpdateDisplay()
+        {
+            DisplayedLine.X1 = (StartPosition[0] - horizontalOffset) * scale;
+            DisplayedLine.Y1 = (StartPosition[1] - verticalOffset) * scale;
+            DisplayedLine.X2 = (EndPosition[0] - horizontalOffset) * scale;
+            DisplayedLine.Y1 = (EndPosition[1] - verticalOffset) * scale;
+        }
+        private Panel panel;
+        private double scale;
+        private double verticalOffset;
+        private double horizontalOffset;
+        public void SetPanel(Panel panel)
+        {
+            this.panel = panel;
+        }
+
+        public void SetScale(double scale, double horizontalOffset, double verticalOffset)
+        {
+            this.scale = scale;
+            this.horizontalOffset = horizontalOffset;
+            this.verticalOffset = verticalOffset;
+        }
+
 
         public double LeftMostPosition()
         {
@@ -69,6 +93,9 @@ namespace Capstone
         {
             listeners.Remove(listener);
         }
-
+        public void StopDisplaying()
+        {
+            panel.Children.Remove(DisplayedLine);
+        }
     }
 }

@@ -100,18 +100,28 @@ namespace Capstone
             this.UpdatePosition();
         }
         protected abstract void UpdatePosition();
-        public virtual void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
-        {
-            var shape = new Polygon();
-            shape.Fill = new SolidColorBrush(Windows.UI.Colors.LightBlue);
 
+
+
+
+
+
+        private Polygon DisplayedRobot;
+        public virtual void StartDisplay()
+        {
+            DisplayedRobot = new Polygon();
+            DisplayedRobot.Fill = new SolidColorBrush(Windows.UI.Colors.LightBlue);
+            UpdateDisplay();
+            panel.Children.Add(DisplayedRobot);
+        }
+        public virtual void UpdateDisplay()
+        {
             var points = new PointCollection();
             foreach (var point in this.FullRobotPosition())
             {
                 points.Add(new Windows.Foundation.Point((point[0] - horizontalOffset) * scale, (point[1] - verticalOffset) * scale));
             }
-            shape.Points = points;
-            panel.Children.Add(shape);
+            DisplayedRobot.Points = points;
         }
 
         public double TopMostPosition()
@@ -182,6 +192,26 @@ namespace Capstone
         public void UnsubsricbeDisplayChanged(ListenToDispalyChanged listener)
         {
             listeners.Remove(listener);
+        }
+
+        private Panel panel;
+        private double scale;
+        private double verticalOffset;
+        private double horizontalOffset;
+        public void SetPanel(Panel panel)
+        {
+            this.panel = panel;
+        }
+
+        public void SetScale(double scale, double horizontalOffset, double verticalOffset)
+        {
+            this.scale = scale;
+            this.horizontalOffset = horizontalOffset;
+            this.verticalOffset = verticalOffset;
+        }
+        public void StopDisplaying()
+        {
+            panel.Children.Remove(DisplayedRobot);
         }
     }
 }

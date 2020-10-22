@@ -8,11 +8,33 @@ namespace Capstone
         public List<Wall> Walls = new List<Wall>();
 
 
-        public virtual void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset)
+        public virtual void StartDisplay()
         {
             foreach (Wall wall in Walls)
             {
-                wall.Display(panel, scale, horizontalOffset, verticalOffset);
+                wall.StartDisplay();
+            }
+        }
+        public virtual void UpdateDisplay()
+        {
+            foreach (Wall wall in Walls)
+            {
+                wall.UpdateDisplay();
+            }
+        }
+        public virtual void SetPanel(Panel panel)
+        {
+            foreach (Wall wall in Walls)
+            {
+                wall.SetPanel(panel);
+            }
+        }
+
+        public virtual void SetScale(double scale, double horizontalOffset, double verticalOffset)
+        {
+            foreach (Wall wall in Walls)
+            {
+                wall.SetScale(scale, horizontalOffset, verticalOffset);
             }
         }
         public virtual double TopMostPosition()
@@ -78,6 +100,13 @@ namespace Capstone
         public void UnsubsricbeDisplayChanged(ListenToDispalyChanged listener)
         {
             listeners.Remove(listener);
+        }
+        public void StopDisplaying()
+        {
+            foreach (Wall wall in Walls)
+            {
+                wall.StopDisplaying();
+            }
         }
     }
 }

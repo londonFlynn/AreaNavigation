@@ -23,17 +23,24 @@ namespace Capstone
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
         }
+        private double recentScale = 1;
+        private double recentVOffset = 0;
+        private double recentHOffset = 0;
         public void AddDisplayItem(IDisplayable item)
         {
             DisplayedItems.Add(item);
             item.SubsricbeDisplayChanged(this);
-            DisplayItems();
+            item.SetPanel(this.FindName("MapCanvas") as Canvas);
+            item.SetScale(recentScale, recentHOffset, recentVOffset);
+            item.StartDisplay();
+            HearDisplayChanged();
         }
         public void RemoveDisplayedItem(IDisplayable item)
         {
             DisplayedItems.Remove(item);
             item.UnsubsricbeDisplayChanged(this);
-            DisplayItems();
+            item.StopDisplaying();
+            HearDisplayChanged();
         }
         private double GenerateScale()
         {
@@ -82,30 +89,29 @@ namespace Capstone
             }
             return new Vector<double>(new double[] { leftMost, topMost, 0, 0 });
         }
-        private void DisplayItems()
+        private void UpdateDisplay()
         {
-            ClearCanvas();
-            double scale = GenerateScale();
-            var offset = GenerateOffset();
-            double horizontalOffset = offset[0];
-            double verticalOffset = offset[1];
             foreach (IDisplayable item in DisplayedItems)
             {
-                item.Display(this.FindName("MapCanvas") as Canvas, scale, horizontalOffset, verticalOffset);
+                item.SetScale(recentScale, recentHOffset, recentVOffset);
+                item.UpdateDisplay();
             }
-        }
-        private void ClearCanvas()
-        {
-            Canvas mapCanvas = this.FindName("MapCanvas") as Canvas;
-            mapCanvas.Children.Clear();
         }
         private void CurrentWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            DisplayItems();
+            HearDisplayChanged();
         }
         public void HearDisplayChanged()
         {
-            //DisplayItems();
+            var offset = GenerateOffset();
+            var scale = GenerateScale();
+            if (offset[0] != recentHOffset || offset[1] != recentVOffset || recentScale != scale)
+            {
+                this.recentScale = scale;
+                this.recentVOffset = offset[1];
+                this.recentHOffset = offset[0];
+                UpdateDisplay();
+            }
         }
 
         private bool UpIsPressed()

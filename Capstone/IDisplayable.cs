@@ -4,7 +4,10 @@ namespace Capstone
 {
     public interface IDisplayable
     {
-        void Display(Panel panel, double scale, double horizontalOffset, double verticalOffset);
+        void StartDisplay();
+        void UpdateDisplay();
+        void SetPanel(Panel panel);
+        void SetScale(double scale, double horizontalOffset, double verticalOffset);
         double MaxWidth();
         double MaxHeight();
         double LeftMostPosition();
@@ -12,6 +15,7 @@ namespace Capstone
         double TopMostPosition();
         double BottomMostPosition();
         void NotifyDisplayChanged();
+        void StopDisplaying();
         void SubsricbeDisplayChanged(ListenToDispalyChanged listener);
         void UnsubsricbeDisplayChanged(ListenToDispalyChanged listener);
     }
