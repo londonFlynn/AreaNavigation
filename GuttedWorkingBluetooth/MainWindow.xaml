@@ -1,0 +1,12 @@
+﻿<Window
+    x:Class="Capstone.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="800"
+    Height="480"
+    Background="Black"
+    KeyDown="CoreWindow_KeyDown"
+    KeyUp="CoreWindow_KeyUp"
+    SizeChanged="CurrentWindow_SizeChanged">
+    <Canvas x:Name="MapCanvas" />
+</Window>

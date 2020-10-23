@@ -13,8 +13,8 @@ namespace RobotCommunicationTestApp
         }
         static async void BrickSetup()
         {
-            //var coms = new Lego.Ev3.Desktop.UsbCommunication();
-            var brick = new Brick(new Lego.Ev3.Desktop.BluetoothCommunication("COM3"));
+            var coms = new Lego.Ev3.Desktop.BluetoothCommunication("COM3");
+            var brick = new Brick(coms);
             brick.BrickChanged += OnBrickChanged;
             Console.WriteLine("Attempting to connect to brick...");
             await brick.ConnectAsync();
