@@ -92,7 +92,7 @@
     <Compile Include="SimulationManager.cs" />
     <Compile Include="UltrasonicRangeReading.cs" />
     <Compile Include="UltrasonicSensor.cs" />
-    <Compile Include="Vector.cs" />
+    <Compile Include="Vector2d.cs" />
     <Compile Include="Wall.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

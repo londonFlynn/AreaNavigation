@@ -91,7 +91,7 @@ namespace Capstone
             var scale = horizontalScale < verticalScale ? horizontalScale : verticalScale;
             return scale;
         }
-        private Vector<double> GenerateOffset()
+        private Vector2d<double> GenerateOffset()
         {
             double topMost = double.MaxValue;
             double leftMost = double.MaxValue;
@@ -102,7 +102,7 @@ namespace Capstone
                 if (item.LeftMostPosition() < leftMost)
                     leftMost = item.LeftMostPosition();
             }
-            return new Vector<double>(new double[] { leftMost, topMost, 0, 0 });
+            return new Vector2d<double>(new double[] { leftMost, topMost, 0, 0 });
         }
         private void UpdateDisplay()
         {

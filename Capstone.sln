@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Capstone", "Capstone\Capstone.csproj", "{D08DD330-E05A-4FF1-80E6-654D763575B4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RobotCommunicationTestApp", "RobotCommunicationTestApp\RobotCommunicationTestApp.csproj", "{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp (WPF)", "GuttedWorkingBluetooth\SampleApp (WPF).csproj", "{0B140421-4421-4673-972F-7FFB6268F0DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AreaNavigation", "GuttedWorkingBluetooth\AreaNavigation.csproj", "{0B140421-4421-4673-972F-7FFB6268F0DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,32 +21,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|ARM.ActiveCfg = Debug|ARM
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|ARM.Build.0 = Debug|ARM
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|ARM.Deploy.0 = Debug|ARM
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|ARM64.Build.0 = Debug|ARM64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|x64.ActiveCfg = Debug|x64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|x64.Build.0 = Debug|x64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|x64.Deploy.0 = Debug|x64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|x86.ActiveCfg = Debug|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|x86.Build.0 = Debug|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Debug|x86.Deploy.0 = Debug|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|Any CPU.ActiveCfg = Release|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|ARM.ActiveCfg = Release|ARM
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|ARM.Build.0 = Release|ARM
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|ARM.Deploy.0 = Release|ARM
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|ARM64.ActiveCfg = Release|ARM64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|ARM64.Build.0 = Release|ARM64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|ARM64.Deploy.0 = Release|ARM64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|x64.ActiveCfg = Release|x64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|x64.Build.0 = Release|x64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|x64.Deploy.0 = Release|x64
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|x86.ActiveCfg = Release|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|x86.Build.0 = Release|x86
-		{D08DD330-E05A-4FF1-80E6-654D763575B4}.Release|x86.Deploy.0 = Release|x86
 		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|ARM.ActiveCfg = Debug|Any CPU

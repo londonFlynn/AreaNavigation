@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -6,21 +7,24 @@ namespace Capstone
 {
     public class RangeReading : SensorReading, IDisplayable
     {
-        public Vector<double> SensorPosition;
-        public readonly Vector<double> DistanceVector;
+        public Vector2d<double> SensorPosition;
+        public readonly Vector2d<double> DistanceVector;
         public readonly double Distance;
-        public Vector<double> ReadingPosition
+        private double _confidence = 0.25;
+        public double Confidence { get { return _confidence; } set { this._confidence = value; UpdateDisplay(); } }
+        public Vector2d<double> ReadingPosition
         {
             get
             {
                 return SensorPosition + DistanceVector;
             }
+
         }
-        public RangeReading(double distance, Vector<double> sensorPosition, double angle)
+        public RangeReading(double distance, Vector2d<double> sensorPosition, double angle)
         {
             this.SensorPosition = sensorPosition;
             this.Distance = distance;
-            var v = new Vector<double>(new double[] { 0, distance, 0, 0 });
+            var v = new Vector2d<double>(new double[] { 0, distance, 0, 0 });
             this.DistanceVector = v.Rotate(angle);
             //this.DistanceVector = new Vector<double>(new double[] { 0, distance, 0, 0 });
         }
@@ -39,6 +43,20 @@ namespace Capstone
                 return base.Equals(obj);
             }
         }
+
+        public static double ConfidenceFromConfidenceChange(double startingConfidence, double confidenceChange)
+        {
+            return ((1 - startingConfidence) * confidenceChange) + startingConfidence;
+        }
+        public double DistanceFromOtherReading(RangeReading that)
+        {
+            var thisPoint = this.ReadingPosition;
+            var thatPoint = that.ReadingPosition;
+            return Math.Sqrt(Math.Pow(thisPoint[0] - thatPoint[0], 2) + Math.Pow(thisPoint[1] - thatPoint[1], 2));
+        }
+
+
+
         private Line DisplayedLine;
         private Ellipse DisplayedEllipse;
         public double BottomMostPosition()
@@ -51,7 +69,7 @@ namespace Capstone
             DisplayedLine = new Line();
             DisplayedLine.Stroke = new SolidColorBrush(Color.FromArgb(255, 15, 15, 15));
             DisplayedEllipse = new Ellipse();
-            DisplayedEllipse.Fill = new SolidColorBrush(this is UltrasonicRangeReading ? Colors.Green : Colors.Red);
+            DisplayedEllipse.Fill = new SolidColorBrush(this is UltrasonicRangeReading ? Color.FromArgb((byte)(255 * Confidence), 0, 255, 0) : Color.FromArgb((byte)(255 * Confidence), 255, 0, 0));
             UpdateDisplay();
             panel.Children.Add(DisplayedLine);
             panel.Children.Add(DisplayedEllipse);

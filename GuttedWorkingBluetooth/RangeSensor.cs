@@ -4,7 +4,7 @@ namespace Capstone
 {
     public abstract class RangeSensor : Sensor
     {
-        public RangeSensor(Vector<double> relativePosition)
+        public RangeSensor(Vector2d<double> relativePosition)
         {
             this.RelativePosition = relativePosition;
         }
@@ -24,8 +24,6 @@ namespace Capstone
                 var newVal = (RecentReading as RangeReading).Distance;
                 if (Math.Abs(newVal - oldVal) < 5)
                 {
-
-
                     foreach (var subscriber in subscribers)
                     {
                         subscriber.ReciveSensorReading(this);

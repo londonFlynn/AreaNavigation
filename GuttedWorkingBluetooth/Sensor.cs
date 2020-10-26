@@ -5,7 +5,7 @@ namespace Capstone
     public abstract class Sensor
     {
         protected SensorReading RecentReading;
-        public Vector<double> RelativePosition { get; protected set; }
+        public Vector2d<double> RelativePosition { get; protected set; }
         public SensorReading GetCurrentReading()
         {
             return RecentReading;

@@ -6,6 +6,7 @@ namespace Capstone
     {
         public List<RangeReading> RangeReadings = new List<RangeReading>();
         private Robot Robot;
+        private const double ZeroConfidenceIncreaseThreshold = 20;
         public ContructedMap(Robot robot)
         {
             this.Robot = robot;
@@ -17,14 +18,40 @@ namespace Capstone
             if (!RangeReadings.Contains(sensor.GetCurrentReading() as RangeReading) /*&& Robot.MovementCommandState == MovementCommandState.NEUTRAL*/)
             {
                 var reading = sensor.GetCurrentReading() as RangeReading;
-                RangeReadings.Add(reading);
                 reading.SetPanel(panel);
                 reading.SetScale(scale, horizontalOffset, verticalOffset);
                 reading.StartDisplay();
+                UpdateReadingConfidence(reading);
+                RangeReadings.Add(reading);
+                if (RangeReadings.Count == 2)
+                {
+                    this.Walls.Add(new ContructedWall(new List<RangeReading>(new RangeReading[] { RangeReadings[0], RangeReadings[1] })));
+                    Walls[0].SetPanel(panel);
+                    Walls[0].SetScale(scale, horizontalOffset, verticalOffset);
+                    Walls[0].StartDisplay();
+                }
+                else if (RangeReadings.Count > 2)
+                {
+                    (this.Walls[0] as ContructedWall).AddRangeReading(reading);
+                }
                 this.NotifyDisplayChanged();
             }
         }
-
+        private void UpdateReadingConfidence(RangeReading reading)
+        {
+            foreach (RangeReading other in RangeReadings)
+            {
+                var distance = reading.DistanceFromOtherReading(other);
+                distance = distance < ZeroConfidenceIncreaseThreshold ? distance : ZeroConfidenceIncreaseThreshold;
+                if (distance < ZeroConfidenceIncreaseThreshold)
+                {
+                    var confidenceChange = (-(distance - (ZeroConfidenceIncreaseThreshold / 2)) + (ZeroConfidenceIncreaseThreshold / 2)) / ZeroConfidenceIncreaseThreshold;
+                    confidenceChange = 0.5 * confidenceChange;
+                    other.Confidence = RangeReading.ConfidenceFromConfidenceChange(other.Confidence, confidenceChange);
+                    reading.Confidence = RangeReading.ConfidenceFromConfidenceChange(reading.Confidence, confidenceChange);
+                }
+            }
+        }
 
 
 

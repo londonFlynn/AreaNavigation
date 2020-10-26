@@ -2,6 +2,6 @@
 {
     public class InfraredSensor : RangeSensor
     {
-        public InfraredSensor(Vector<double> relPos) : base(relPos) { }
+        public InfraredSensor(Vector2d<double> relPos) : base(relPos) { }
     }
 }

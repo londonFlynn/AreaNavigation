@@ -8,11 +8,11 @@
         public readonly double RotaionalAccelerationRate = 1;
         public SimulatedRobot()
         {
-            this.Shape = new Vector<double>[4];
-            this.Shape[0] = new Vector<double>(new double[] { 5, 10, 0, 0 });
-            this.Shape[1] = new Vector<double>(new double[] { 5, -10, 0, 0 });
-            this.Shape[2] = new Vector<double>(new double[] { -5, -10, 0, 0 });
-            this.Shape[3] = new Vector<double>(new double[] { -5, 10, 0, 0 });
+            this.Shape = new Vector2d<double>[4];
+            this.Shape[0] = new Vector2d<double>(new double[] { 5, 10, 0, 0 });
+            this.Shape[1] = new Vector2d<double>(new double[] { 5, -10, 0, 0 });
+            this.Shape[2] = new Vector2d<double>(new double[] { -5, -10, 0, 0 });
+            this.Shape[3] = new Vector2d<double>(new double[] { -5, 10, 0, 0 });
             this.RoboticCommunication = new SimulatedCommunication(this);
         }
 
