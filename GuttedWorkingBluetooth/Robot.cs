@@ -30,7 +30,7 @@ namespace Capstone
             set
             {
                 _movementCommandState = value;
-                RoboticCommunication.CommandMove(_movementCommandState, 0.75);
+                RoboticCommunication.CommandMove(_movementCommandState, 1);
             }
         }
         public Robot()

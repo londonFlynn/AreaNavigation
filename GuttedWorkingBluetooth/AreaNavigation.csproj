@@ -58,6 +58,7 @@
     </ApplicationDefinition>
     <Compile Include="AccelerometerReading.cs" />
     <Compile Include="AccelerometerSensor.cs" />
+    <Compile Include="AreaEmptyReading.cs" />
     <Compile Include="ContructedMap.cs" />
     <Compile Include="ContructedWall.cs" />
     <Compile Include="Direction.cs" />
@@ -69,10 +70,12 @@
     <Compile Include="InfraredRangeReading.cs" />
     <Compile Include="InfraredSensor.cs" />
     <Compile Include="ISensorReadingSubsriber.cs" />
+    <Compile Include="LineTool.cs" />
     <Compile Include="ListenToDispalyChanged.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MovementCommandState.cs" />
     <Compile Include="NetworkNode.cs" />
+    <Compile Include="ObstacleSurface.cs" />
     <Compile Include="PathNetwork.cs" />
     <Compile Include="PathRoute.cs" />
     <Compile Include="ProgramManager.cs" />
@@ -90,6 +93,7 @@
     <Compile Include="SimulatedRobot.cs" />
     <Compile Include="SimulatedWall.cs" />
     <Compile Include="SimulationManager.cs" />
+    <Compile Include="SurfaceCoordinate.cs" />
     <Compile Include="UltrasonicRangeReading.cs" />
     <Compile Include="UltrasonicSensor.cs" />
     <Compile Include="Vector2d.cs" />

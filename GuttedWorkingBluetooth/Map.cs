@@ -7,6 +7,10 @@ namespace Capstone
         public List<Wall> Walls = new List<Wall>();
 
 
+        protected System.Windows.Controls.Canvas panel;
+        protected double scale;
+        protected double verticalOffset;
+        protected double horizontalOffset;
         public virtual void StartDisplay()
         {
             foreach (Wall wall in Walls)
@@ -23,14 +27,17 @@ namespace Capstone
         }
         public virtual void SetPanel(System.Windows.Controls.Canvas panel)
         {
+            this.panel = panel;
             foreach (Wall wall in Walls)
             {
                 wall.SetPanel(panel);
             }
         }
-
         public virtual void SetScale(double scale, double horizontalOffset, double verticalOffset)
         {
+            this.scale = scale;
+            this.horizontalOffset = horizontalOffset;
+            this.verticalOffset = verticalOffset;
             foreach (Wall wall in Walls)
             {
                 wall.SetScale(scale, horizontalOffset, verticalOffset);
@@ -100,7 +107,7 @@ namespace Capstone
         {
             listeners.Remove(listener);
         }
-        public void StopDisplaying()
+        public virtual void StopDisplaying()
         {
             foreach (Wall wall in Walls)
             {

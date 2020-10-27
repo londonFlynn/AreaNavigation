@@ -10,8 +10,7 @@ namespace Capstone
         public Vector2d<double> SensorPosition;
         public readonly Vector2d<double> DistanceVector;
         public readonly double Distance;
-        private double _confidence = 0.25;
-        public double Confidence { get { return _confidence; } set { this._confidence = value; UpdateDisplay(); } }
+        public int TimesSampled = 0;
         public Vector2d<double> ReadingPosition
         {
             get
@@ -69,7 +68,7 @@ namespace Capstone
             DisplayedLine = new Line();
             DisplayedLine.Stroke = new SolidColorBrush(Color.FromArgb(255, 15, 15, 15));
             DisplayedEllipse = new Ellipse();
-            DisplayedEllipse.Fill = new SolidColorBrush(this is UltrasonicRangeReading ? Color.FromArgb((byte)(255 * Confidence), 0, 255, 0) : Color.FromArgb((byte)(255 * Confidence), 255, 0, 0));
+            DisplayedEllipse.Fill = new SolidColorBrush(this is UltrasonicRangeReading ? Color.FromArgb(255, 0, 255, 0) : Color.FromArgb(255, 255, 0, 0));
             UpdateDisplay();
             panel.Children.Add(DisplayedLine);
             panel.Children.Add(DisplayedEllipse);

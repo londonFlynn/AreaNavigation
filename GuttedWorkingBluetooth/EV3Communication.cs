@@ -163,7 +163,7 @@ namespace Capstone
         }
         private void UpdateUltrasonicValue(Port port)
         {
-            if (!(Robot.USSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1 && port.RawValue < 1200)
+            if (!(Robot.USSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
                 Robot.USSensor.SetRecentReading(
                     new UltrasonicRangeReading(
                         (port.RawValue + 0d) / 10,

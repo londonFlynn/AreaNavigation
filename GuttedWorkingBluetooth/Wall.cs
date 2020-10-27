@@ -14,11 +14,6 @@ namespace Capstone
 
 
         private Line DisplayedLine;
-        public virtual double BottomMostPosition()
-        {
-            return StartPosition[1] > EndPosition[1] ? StartPosition[1] : EndPosition[1];
-        }
-
         public virtual void StartDisplay()
         {
             DisplayedLine = new Line();
@@ -59,40 +54,36 @@ namespace Capstone
         {
             this.panel = panel;
         }
-
         public void SetScale(double scale, double horizontalOffset, double verticalOffset)
         {
             this.scale = scale;
             this.horizontalOffset = horizontalOffset;
             this.verticalOffset = verticalOffset;
         }
-
-
         public virtual double LeftMostPosition()
         {
             return StartPosition[0] < EndPosition[0] ? StartPosition[0] : EndPosition[0];
         }
-
-        public double MaxHeight()
-        {
-            return BottomMostPosition() - TopMostPosition();
-        }
-
-        public double MaxWidth()
-        {
-            return RightMostPosition() - LeftMostPosition();
-        }
-
         public virtual double RightMostPosition()
         {
             return StartPosition[0] > EndPosition[0] ? StartPosition[0] : EndPosition[0];
         }
-
         public virtual double TopMostPosition()
         {
             return StartPosition[1] < EndPosition[1] ? StartPosition[1] : EndPosition[1];
         }
-
+        public virtual double BottomMostPosition()
+        {
+            return StartPosition[1] > EndPosition[1] ? StartPosition[1] : EndPosition[1];
+        }
+        public double MaxHeight()
+        {
+            return BottomMostPosition() - TopMostPosition();
+        }
+        public double MaxWidth()
+        {
+            return RightMostPosition() - LeftMostPosition();
+        }
         public void NotifyDisplayChanged()
         {
             foreach (var listener in listeners)
@@ -100,7 +91,6 @@ namespace Capstone
                 listener.HearDisplayChanged();
             }
         }
-
         private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
         public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
         {
