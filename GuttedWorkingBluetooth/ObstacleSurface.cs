@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -49,7 +48,7 @@ namespace Capstone
 
                 SetDisplayColor(cell.HorizontalCoordinate, cell.VerticalCoorindate);
             }
-            Debug.WriteLine($"Changed {increease.Count + decrease.Count} cells");
+            //Debug.WriteLine($"Changed {increease.Count + decrease.Count} cells");
         }
         public void MatchToAreaEmptyReading(AreaEmptyReading reading, double amount)
         {
@@ -118,7 +117,13 @@ namespace Capstone
                 return 0;
             else
                 return 1;
-            //return Math.Min(Math.Min(LineTool.DistanceBetweenPointAndLine(minBounding, point1, point2), LineTool.DistanceBetweenPointAndLine(maxBounding, point1, point2)), Math.Min(LineTool.DistanceBetweenPointAndLine(otherCorner1, point1, point2), LineTool.DistanceBetweenPointAndLine(otherCorner2, point1, point2)));
+            //return Math.Min(
+            //        Math.Min(
+            //            LineTool.DistanceBetweenPointAndLine(minBounding, point1, point2),
+            //            LineTool.DistanceBetweenPointAndLine(maxBounding, point1, point2)),
+            //        Math.Min(
+            //            LineTool.DistanceBetweenPointAndLine(otherCorner1, point1, point2),
+            //            LineTool.DistanceBetweenPointAndLine(otherCorner2, point1, point2)));
         }
         private bool LineIntersectsCell(SurfaceCoordinate cell, Vector2d<double> point1, Vector2d<double> point2)
         {
