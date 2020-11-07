@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -7,8 +8,13 @@ namespace Capstone
 {
     public class ObstacleSurface : IDisplayable
     {
-        private double CMPerPixel { get; set; }
+        public double CMPerPixel { get; private set; }
         private double[][] PixelMapping { get; set; }
+        public int Width { get { return PixelMapping.Length; } }
+        public int Height { get { return PixelMapping[0].Length; } }
+        public const double ReadingRadius = 6.5;
+        public const double ReadingNegativeRadius = 6.5;
+        public const double SensorFalloffDistance = 120;
         public ObstacleSurface(double cmPerPixel, int resolutionWidth, int resolutionHeight)
         {
             this.CMPerPixel = cmPerPixel;
@@ -18,48 +24,125 @@ namespace Capstone
                 PixelMapping[i] = new double[resolutionHeight];
             }
         }
-        public const double ReadingRadius = 6.5;
-        public void MatchToRangeReading(RangeReading reading, double amount)
+
+        public void MatchToRangeReading(RangeReading reading, double amount, bool update = true)
         {
             //TODO Smooth trasitioning
-            var point = reading.ReadingPosition;
-            var increaseCell = CoordinateForPoint(point);
-            var increease = CellsWithinRadiusOfPoint(point, ReadingRadius);
-            var decrease = CellsWithinDistanceOfLineSegmant(point, reading.SensorPosition, 0);
-            decrease.Remove(increaseCell);
-            if (reading.Distance < 120)
+            var endpoint = reading.ReadingPosition;
+            var startPoint = reading.SensorPosition;
+            List<SurfaceCoordinate> decrease;
+            if (reading.Distance < SensorFalloffDistance)
             {
-                foreach (var cell in increease)
+                var increase = CellsWithinRadiusOfPoint(endpoint * ((endpoint.Magnitude() + (ReadingRadius / 2)) / endpoint.Magnitude()), ReadingRadius);
+                decrease = CellsWithinDistanceOfLineSegmant(endpoint, startPoint, ReadingNegativeRadius);
+                decrease.RemoveAll(x => increase.Any(y => y.Equals(x)));
+                foreach (var cell in increase)
                 {
-                    var value = GetPixelValue(cell);
-                    var distance = DistanceBetweenGridCellAndPoint(cell, point);
-                    var distanceModifier = -(distance - ReadingRadius) / ReadingRadius;
-                    var valueDistanceFrom1 = 1 - value;
-                    var valueIncrease = valueDistanceFrom1 * distanceModifier * amount;
-                    SetPixelValue(cell, value + valueIncrease);
-                    SetDisplayColor(cell.HorizontalCoordinate, cell.VerticalCoorindate);
+                    AdjustRangeReadingObstacleValueForCell(cell, endpoint, startPoint, amount);
+                    SurfaceUpdateQueue.Add(cell);
                 }
+            }
+            else
+            {
+                var point = reading.SensorPosition + (reading.DistanceVector.Unit() * (SensorFalloffDistance / 2));
+                endpoint = point;
+                decrease = CellsWithinDistanceOfLineSegmant(endpoint, startPoint, ReadingNegativeRadius);
             }
             foreach (var cell in decrease)
             {
-                SetPixelValue(cell, -1);
-                //Decrease Confidence based on the distance from the sensor, when reading is long range
-                //get an area around the line to change to confidence of
-
-                SetDisplayColor(cell.HorizontalCoordinate, cell.VerticalCoorindate);
+                AdjustRangeReadingNoObstacleValueForCell(cell, endpoint, startPoint, amount);
+                SurfaceUpdateQueue.Add(cell);
             }
-            //Debug.WriteLine($"Changed {increease.Count + decrease.Count} cells");
+            if (update)
+                UpdateDisplayColors();
         }
-        public void MatchToAreaEmptyReading(AreaEmptyReading reading, double amount)
+        private void AdjustRangeReadingObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer)
         {
-            //TODO
-            throw new System.NotImplementedException();
+
+            var CurrentValue = GetPixelValue(cell);
+            var DistanceFromReading = DistanceBetweenGridCellAndPoint(cell, readingPosition);
+            var DistanceFromSensor = LineTool.DistanceBetweenPoints(CenterOfCell(cell), SensorPostion);
+            var DistanceFromSensorScale = Math.Max(0, -((1d / SensorFalloffDistance) * DistanceFromSensor) + 1);
+            var DistanceFromReadingScale = Math.Max(0, -((1d / ReadingNegativeRadius) * DistanceFromReading) + 1);
+            var ReadingChanged = Math.Min(1, 2 * DistanceFromSensorScale * DistanceFromReadingScale * scaleModifer);
+            var ChangedValue = CurrentValue + ReadingChanged > 1 ? 1 : CurrentValue + ReadingChanged;
+            SetPixelValue(cell, ChangedValue);
         }
-        private List<SurfaceCoordinate> CellsWithinRadiusOfPoint(Vector2d<double> point, double radius)
+        private void AdjustRangeReadingNoObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer)
+        {
+            var CurrentValue = GetPixelValue(cell);
+            var DistanceFromReading = DistanceBetweenGridCellAndLineSegmant(cell, SensorPostion, readingPosition);
+            var DistanceFromSensor = LineTool.DistanceBetweenPoints(CenterOfCell(cell), SensorPostion);
+            var DistanceFromSensorScale = Math.Max(0, -((1d / SensorFalloffDistance) * DistanceFromSensor) + 1);
+            var DistanceFromReadingScale = Math.Max(0, -((1d / ReadingNegativeRadius) * DistanceFromReading) + 1);
+            var ReadingChanged = Math.Min(1, 2 * DistanceFromSensorScale * DistanceFromReadingScale * scaleModifer);
+            var ChangedValue = CurrentValue - ReadingChanged < -1 ? -1 : CurrentValue - ReadingChanged;
+            SetPixelValue(cell, ChangedValue);
+        }
+        private void EnsureCoordinatesWithinGrid(List<SurfaceCoordinate> coords)
+        {
+            int minx = 0;
+            int miny = 0;
+            int maxx = 0;
+            int maxy = 0;
+            int shiftx = 0;
+            int shifty = 0;
+            foreach (var coord in coords)
+            {
+                if (coord.HorizontalCoordinate < minx)
+                    minx = coord.HorizontalCoordinate;
+                if (coord.VerticalCoorindate < miny)
+                    miny = coord.VerticalCoorindate;
+                if (coord.HorizontalCoordinate > maxx)
+                    maxx = coord.HorizontalCoordinate;
+                if (coord.VerticalCoorindate > miny)
+                    maxy = coord.VerticalCoorindate;
+            }
+            if (minx < 0 || miny < 0)
+            {
+                var shift = new SurfaceCoordinate(minx, miny);
+                SetPixelValue(shift, GetPixelValue(shift));
+                shiftx = shift.HorizontalCoordinate - minx;
+                shifty = shift.VerticalCoorindate - miny;
+            }
+            if (maxx >= this.PixelMapping.Length || maxy >= this.PixelMapping[0].Length)
+            {
+                var shift = new SurfaceCoordinate(maxx, maxy);
+                SetPixelValue(shift, GetPixelValue(shift));
+                shiftx = shift.HorizontalCoordinate - maxx > shiftx ? shift.HorizontalCoordinate - maxx : shiftx;
+                shifty = shift.VerticalCoorindate - maxy > shifty ? shift.VerticalCoorindate - maxy : shifty;
+            }
+            if (shiftx > 0 || shifty > 0)
+            {
+                for (int i = 0; i < coords.Count; i++)
+                {
+                    coords[i] = new SurfaceCoordinate(coords[i].HorizontalCoordinate + shiftx, coords[i].VerticalCoorindate + shifty);
+                }
+            }
+        }
+        public void MatchToAreaEmptyReading(PositionOccupiedByRobotMemory reading, double amount, bool update = true)
+        {
+            //Debug.WriteLine("Matching To Past Occupied Reading");
+            var cells = CellsWithinPolygon(reading.Shape);
+            foreach (var cell in cells)
+            {
+                var CurrentValue = GetPixelValue(cell);
+                var ChangedValue = Math.Max(-1, CurrentValue - (amount));
+                SetPixelValue(cell, ChangedValue);
+                SurfaceUpdateQueue.Add(cell);
+            }
+            if (update)
+                UpdateDisplayColors();
+        }
+        public List<SurfaceCoordinate> CellsWithinRadiusOfPoint(Vector2d<double> point, double radius, bool ensureWithinGrid = true)
         {
             var startCell = CoordinateForPoint(point);
             var cellList = new List<SurfaceCoordinate>();
             CellsWithinRadiusOfPointRecursion(startCell, cellList, point, radius);
+            if (ensureWithinGrid)
+            {
+                EnsureCoordinatesWithinGrid(cellList);
+            }
             return cellList;
         }
         private void CellsWithinRadiusOfPointRecursion(SurfaceCoordinate checkCell, List<SurfaceCoordinate> containedCells, Vector2d<double> point, double radius)
@@ -68,25 +151,10 @@ namespace Capstone
             {
                 containedCells.Add(checkCell);
                 var nextCellsToCheck = new List<SurfaceCoordinate>();
-                if (checkCell.HorizontalCoordinate > 0)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate - 1, checkCell.VerticalCoorindate));
-                }
-                if (checkCell.HorizontalCoordinate < PixelMapping.Length - 1)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate + 1, checkCell.VerticalCoorindate));
-
-                }
-                if (checkCell.VerticalCoorindate > 0)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate - 1));
-
-                }
-                if (checkCell.VerticalCoorindate < PixelMapping[0].Length - 1)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate + 1));
-
-                }
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate - 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate - 1));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate + 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate + 1));
                 foreach (var next in nextCellsToCheck)
                 {
                     CellsWithinRadiusOfPointRecursion(next, containedCells, point, radius);
@@ -95,11 +163,66 @@ namespace Capstone
         }
         private void SetPixelValue(SurfaceCoordinate cell, double value)
         {
+            if (cell.HorizontalCoordinate >= PixelMapping.Length || cell.VerticalCoorindate >= PixelMapping[0].Length ||
+                cell.HorizontalCoordinate < 0 || cell.VerticalCoorindate < 0)
+            {
+                var othercell = ExpandDimensions(cell);
+                cell.VerticalCoorindate = othercell.VerticalCoorindate;
+                cell.HorizontalCoordinate = othercell.HorizontalCoordinate;
+            }
             PixelMapping[cell.HorizontalCoordinate][cell.VerticalCoorindate] = value;
         }
-        private double GetPixelValue(SurfaceCoordinate cell)
+        public double GetPixelValue(SurfaceCoordinate cell)
         {
+            if (cell.HorizontalCoordinate >= PixelMapping.Length || cell.VerticalCoorindate >= PixelMapping[0].Length ||
+                cell.HorizontalCoordinate < 0 || cell.VerticalCoorindate < 0)
+            {
+                //var othercell = ExpandDimensions(cell);
+                //cell.VerticalCoorindate = othercell.VerticalCoorindate;
+                //cell.HorizontalCoordinate = othercell.HorizontalCoordinate;
+                return 0;
+            }
             return PixelMapping[cell.HorizontalCoordinate][cell.VerticalCoorindate];
+        }
+        private SurfaceCoordinate ExpandDimensions(SurfaceCoordinate coordinate)
+        {
+            int halfWidthDifference = 0;
+            int halfHeightDifference = 0;
+            int minWidth = this.PixelMapping.Length;
+            if (coordinate.HorizontalCoordinate < 0 || coordinate.HorizontalCoordinate >= this.PixelMapping.Length)
+            {
+                halfWidthDifference = coordinate.HorizontalCoordinate < 0 ? Math.Abs(coordinate.HorizontalCoordinate) : 1 + coordinate.HorizontalCoordinate - this.PixelMapping.Length;
+                halfWidthDifference = halfWidthDifference * 2 > minWidth ? halfWidthDifference : minWidth / 2;
+                minWidth += (halfWidthDifference * 2);
+            }
+            int minHeight = this.PixelMapping[0].Length;
+            if (coordinate.VerticalCoorindate < 0 || coordinate.VerticalCoorindate >= this.PixelMapping[0].Length)
+
+            {
+                halfHeightDifference = coordinate.VerticalCoorindate < 0 ? Math.Abs(coordinate.VerticalCoorindate) : 1 + coordinate.VerticalCoorindate - this.PixelMapping.Length;
+                halfHeightDifference = halfHeightDifference * 2 > minHeight ? halfHeightDifference : minHeight / 2;
+                minHeight += (halfHeightDifference * 2);
+            }
+
+
+
+            var map = new double[minWidth][];
+            for (int i = 0; i < map.Length; i++)
+            {
+                map[i] = new double[minHeight];
+            }
+            for (int i = 0; i < PixelMapping.Length; i++)
+            {
+                for (int j = 0; j < PixelMapping[i].Length; j++)
+                {
+                    map[i + halfWidthDifference][j + halfHeightDifference] = PixelMapping[i][j];
+                }
+            }
+            this.PixelMapping = map;
+            this.StopDisplaying();
+            this.StartDisplay();
+            this.NotifyDisplayChanged();
+            return new SurfaceCoordinate(coordinate.HorizontalCoordinate + halfWidthDifference, coordinate.VerticalCoorindate + halfHeightDifference);
         }
         private double DistanceBetweenGridCellAndPoint(SurfaceCoordinate cell, Vector2d<double> point)
         {
@@ -112,36 +235,24 @@ namespace Capstone
         }
         private double DistanceBetweenGridCellAndLineSegmant(SurfaceCoordinate cell, Vector2d<double> point1, Vector2d<double> point2)
         {
-            var intersect = LineIntersectsCell(cell, point1, point2);
-            if (intersect)
-                return 0;
-            else
-                return 1;
-            //return Math.Min(
-            //        Math.Min(
-            //            LineTool.DistanceBetweenPointAndLine(minBounding, point1, point2),
-            //            LineTool.DistanceBetweenPointAndLine(maxBounding, point1, point2)),
-            //        Math.Min(
-            //            LineTool.DistanceBetweenPointAndLine(otherCorner1, point1, point2),
-            //            LineTool.DistanceBetweenPointAndLine(otherCorner2, point1, point2)));
+            return Math.Max(LineTool.DistanceBetweenPointAndLine(CenterOfCell(cell), point1, point2) - (CMPerPixel / 2d), 0);
         }
-        private bool LineIntersectsCell(SurfaceCoordinate cell, Vector2d<double> point1, Vector2d<double> point2)
+        public Vector2d<double> CenterOfCell(SurfaceCoordinate cell)
         {
-            var bounding = CellBoundingRange(cell);
-            var minBounding = bounding[0];
-            var maxBounding = bounding[1];
-            var otherCorner1 = bounding[2];
-            var otherCorner2 = bounding[3];
-            return LineTool.Intersect(minBounding, otherCorner1, point1, point2) ||
-                LineTool.Intersect(otherCorner1, maxBounding, point1, point2) ||
-                LineTool.Intersect(maxBounding, otherCorner2, point1, point2) ||
-                LineTool.Intersect(otherCorner2, minBounding, point1, point2);
+            return new Vector2d<double>(new double[] {
+                (cell.HorizontalCoordinate - PixelMapping.Length/2d) * CMPerPixel,
+                (cell.VerticalCoorindate - PixelMapping[0].Length/2d) * CMPerPixel
+            });
         }
-        private List<SurfaceCoordinate> CellsWithinDistanceOfLineSegmant(Vector2d<double> point1, Vector2d<double> point2, double radius)
+        public List<SurfaceCoordinate> CellsWithinDistanceOfLineSegmant(Vector2d<double> point1, Vector2d<double> point2, double radius, bool ensureWithinGrid = true)
         {
             var startCell = CoordinateForPoint(point1);
             var cellList = new List<SurfaceCoordinate>();
             CellsWithinDistanceOfLineSegmantRecursion(startCell, cellList, point1, point2, radius);
+            if (ensureWithinGrid)
+            {
+                EnsureCoordinatesWithinGrid(cellList);
+            }
             return cellList;
         }
         private void CellsWithinDistanceOfLineSegmantRecursion(SurfaceCoordinate checkCell, List<SurfaceCoordinate> containedCells, Vector2d<double> point1, Vector2d<double> point2, double radius)
@@ -150,30 +261,43 @@ namespace Capstone
             {
                 containedCells.Add(checkCell);
                 var nextCellsToCheck = new List<SurfaceCoordinate>();
-                if (checkCell.HorizontalCoordinate > 0)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate - 1, checkCell.VerticalCoorindate));
-                }
-                if (checkCell.HorizontalCoordinate < PixelMapping.Length - 1)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate + 1, checkCell.VerticalCoorindate));
-
-                }
-                if (checkCell.VerticalCoorindate > 0)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate - 1));
-
-                }
-                if (checkCell.VerticalCoorindate < PixelMapping[0].Length - 1)
-                {
-                    nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate + 1));
-
-                }
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate - 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate + 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate - 1));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate + 1));
                 foreach (var next in nextCellsToCheck)
                 {
                     CellsWithinDistanceOfLineSegmantRecursion(next, containedCells, point1, point2, radius);
                 }
             }
+        }
+        public bool CellsWithinDistanceOfLineSegmantAreClear(Vector2d<double> point1, Vector2d<double> point2, double radius, double threshold)
+        {
+            var startCell = CoordinateForPoint(point1);
+            var cellList = new List<SurfaceCoordinate>();
+            return CellsWithinDistanceOfLineSegmantAreClearRecursion(startCell, cellList, point1, point2, radius, threshold);
+        }
+        private bool CellsWithinDistanceOfLineSegmantAreClearRecursion(SurfaceCoordinate checkCell, List<SurfaceCoordinate> containedCells, Vector2d<double> point1, Vector2d<double> point2, double radius, double threshold)
+        {
+            if (GetPixelValue(checkCell) >= threshold)
+            {
+                return false;
+            }
+            bool result = true;
+            if (!containedCells.Contains(checkCell) && DistanceBetweenGridCellAndLineSegmant(checkCell, point1, point2) <= radius)
+            {
+                containedCells.Add(checkCell);
+                var nextCellsToCheck = new List<SurfaceCoordinate>();
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate - 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate + 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate - 1));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate + 1));
+                for (int i = 0; i < nextCellsToCheck.Count && result; i++)
+                {
+                    result = result && CellsWithinDistanceOfLineSegmantAreClearRecursion(nextCellsToCheck[i], containedCells, point1, point2, radius, threshold);
+                }
+            }
+            return result;
         }
         private Vector2d<double>[] CellBoundingRange(SurfaceCoordinate cell)
         {
@@ -184,64 +308,120 @@ namespace Capstone
             result[3] = new Vector2d<double>(new double[] { result[1][0], result[0][1] });
             return result;
         }
-        private SurfaceCoordinate CoordinateForPoint(Vector2d<double> point)
+        public SurfaceCoordinate CoordinateForPoint(Vector2d<double> point)
         {
             return new SurfaceCoordinate(
                 (int)Math.Floor(point[0] / CMPerPixel) + (PixelMapping.Length / 2),
                 (int)Math.Floor(point[1] / CMPerPixel) + (PixelMapping[0].Length / 2));
         }
-        private SurfaceCoordinate[] CoordinatesForLine(Vector2d<double> start, Vector2d<double> end)
+        private List<SurfaceCoordinate> CellsWithinPolygon(Vector2d<double>[] polygon, bool ensureWithinGrid = true)
         {
-            List<SurfaceCoordinate> coordinates = new List<SurfaceCoordinate>();
-            coordinates.Add(CoordinateForPoint(start));
-            var endCoordinate = CoordinateForPoint(end);
-            if (!coordinates.Contains(endCoordinate))
+            var startCell = CoordinateForPoint(polygon[0]);
+            var cellList = new List<SurfaceCoordinate>();
+            CellsWithinPolygonRecursion(startCell, cellList, polygon, true);
+            if (ensureWithinGrid)
             {
-                coordinates.Add(endCoordinate);
+                EnsureCoordinatesWithinGrid(cellList);
             }
-            var VectorIncriment = start - end;
-            VectorIncriment = VectorIncriment / CMPerPixel;
-            var checkVector = start + VectorIncriment;
-            while (PointIsBetweenPoints(checkVector, start, end))
+            return cellList;
+        }
+        private void CellsWithinPolygonRecursion(SurfaceCoordinate checkCell, List<SurfaceCoordinate> containedCells, Vector2d<double>[] polygon, bool start = false)
+        {
+            bool within = CellIsWithinPolygon(checkCell, polygon);
+            if (start || (!containedCells.Contains(checkCell) && within))
             {
-                var coords = CoordinateForPoint(checkVector);
-                if (!coordinates.Contains(coords))
+                if (within)
+                    containedCells.Add(checkCell);
+                var nextCellsToCheck = new List<SurfaceCoordinate>();
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate - 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate - 1));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate + 1, checkCell.VerticalCoorindate));
+                nextCellsToCheck.Add(new SurfaceCoordinate(checkCell.HorizontalCoordinate, checkCell.VerticalCoorindate + 1));
+                foreach (var next in nextCellsToCheck)
                 {
-                    coordinates.Add(coords);
+                    CellsWithinPolygonRecursion(next, containedCells, polygon);
                 }
-                checkVector += VectorIncriment;
             }
-            return coordinates.ToArray();
         }
-        private bool PointIsBetweenPoints(Vector2d<double> checkPoint, Vector2d<double> start, Vector2d<double> end)
+        private bool CellIsWithinPolygon(SurfaceCoordinate checkCell, Vector2d<double>[] polygon)
         {
-            var isBetween = true;
-            if (start[0] < end[0])
-            {
-                isBetween = isBetween && checkPoint[0] > start[0] && checkPoint[0] < end[0];
-            }
-            else if (start[0] > end[0])
-            {
-                isBetween = isBetween && checkPoint[0] < start[0] && checkPoint[0] > end[0];
-            }
-            if (start[1] < end[1])
-            {
-                isBetween = isBetween && checkPoint[1] > start[1] && checkPoint[1] < end[1];
-            }
-            else if (start[1] > end[1])
-            {
-                isBetween = isBetween && checkPoint[1] < start[1] && checkPoint[1] > end[1];
-            }
-            return isBetween;
+            return LineTool.PointIsWithinPolygon(CenterOfCell(checkCell), polygon);
         }
+        public List<ArcSegmentConfidence> GetConfidenceArcSegmants(Vector2d<double> posistion)
+        {
+            double angleIncriment = Math.PI / 15;
+            var arcs = new List<ArcSegmentConfidence>();
+            double confidenceSum = 0;
+            int confidenceCount = 0;
+            int arcIndex = 0;
+            for (double angle = 0; angle < 2 * Math.PI; angle += angleIncriment)
+            {
+                var direction = new Vector2d<double>(new double[] { SensorFalloffDistance / 2, 0 }).Rotate(angle);
+                var confidence = GetRayConfidence(posistion, direction);
 
-
-
-
-
+                if (arcs.Count == 0 || arcs[arcIndex - 1].AngleInRadians >= Math.PI ||
+                    (arcs[arcIndex - 1].Confidence < ArcSegmentConfidence.ConfidenceTreshold && confidence >= ArcSegmentConfidence.ConfidenceTreshold) ||
+                    (arcs[arcIndex - 1].Confidence >= ArcSegmentConfidence.ConfidenceTreshold && confidence < ArcSegmentConfidence.ConfidenceTreshold))
+                {
+                    arcs.Add(new ArcSegmentConfidence(angleIncriment, posistion, direction.Rotate(-angleIncriment / 2), confidence));
+                    confidenceSum = confidence;
+                    confidenceCount = 1;
+                    arcIndex++;
+                }
+                else
+                {
+                    confidenceSum += confidence;
+                    confidenceCount++;
+                    arcs[arcIndex - 1].AngleInRadians += angleIncriment;
+                    arcs[arcIndex - 1].Confidence = confidenceSum / confidenceCount;
+                }
+            }
+            return arcs;
+        }
+        private double GetRayConfidence(Vector2d<double> posistion, Vector2d<double> direction)
+        {
+            var cells = CellsWithinDistanceOfLineSegmant(posistion, posistion + direction, CMPerPixel * 2, false);
+            double highest = 0;
+            double confidenceSum = 0;
+            foreach (var cell in cells)
+            {
+                var cellConfidence = GetPixelValue(cell);
+                if (cellConfidence > highest)
+                    highest = cellConfidence;
+                confidenceSum += Math.Abs(cellConfidence);
+            }
+            if (cells.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("There are no cells in that ray");
+            }
+            double result = Math.Max(confidenceSum / cells.Count, highest * 0.75);
+            return Double.IsNaN(result) ? 0 : result;
+        }
+        public bool CellIsWithinGrid(SurfaceCoordinate cell)
+        {
+            return cell.HorizontalCoordinate > 0 && cell.VerticalCoorindate > 0 && cell.HorizontalCoordinate < Width && cell.VerticalCoorindate < Width;
+        }
 
         //Display functionality
+        private List<SurfaceCoordinate> SurfaceUpdateQueue = new List<SurfaceCoordinate>();
         private System.Windows.Shapes.Rectangle[][] PixelDisplay;
+        protected Canvas panel;
+        protected double scale;
+        protected double verticalOffset;
+        protected double horizontalOffset;
+        private void UpdateDisplayColors()
+        {
+            for (int i = 0; i < SurfaceUpdateQueue.Count; i++)
+            {
+                //try
+                //{
+                if (!(SurfaceUpdateQueue[i] is null))
+                    SetDisplayColor(SurfaceUpdateQueue[i].HorizontalCoordinate, SurfaceUpdateQueue[i].VerticalCoorindate);
+                //}
+                //catch (System.NullReferenceException e) { }
+            }
+            SurfaceUpdateQueue = new List<SurfaceCoordinate>();
+        }
         public virtual void StartDisplay()
         {
             PixelDisplay = new System.Windows.Shapes.Rectangle[this.PixelMapping.Length][];
@@ -251,7 +431,9 @@ namespace Capstone
                 for (int j = 0; j < PixelDisplay[i].Length; j++)
                 {
                     PixelDisplay[i][j] = new System.Windows.Shapes.Rectangle();
+                    Canvas.SetZIndex(PixelDisplay[i][j], int.MinValue);
                     panel.Children.Add(PixelDisplay[i][j]);
+
                 }
             }
             UpdateDisplay();
@@ -283,14 +465,11 @@ namespace Capstone
         }
         private void SetDisplayColor(int x, int y)
         {
-            PixelDisplay[x][y].Fill = new SolidColorBrush(PixelMapping[x][y] >= 0 ?
-                Color.FromArgb(255, (byte)(125 + Math.Floor(130 * PixelMapping[x][y])), 125, 125) :
-                Color.FromArgb((byte)(255), (byte)(125 * (1 + PixelMapping[x][y])), (byte)(125 * (1 + PixelMapping[x][y])), (byte)(125 * (1 + PixelMapping[x][y]))));
+            var coord = new SurfaceCoordinate(x, y);
+            PixelDisplay[x][y].Fill = new SolidColorBrush(GetPixelValue(coord) >= 0 ?
+                Color.FromArgb(255, (byte)(125 + Math.Floor(130 * GetPixelValue(coord))), 125, 125) :
+                Color.FromArgb((byte)(255), (byte)(125 * (1 + GetPixelValue(coord))), (byte)(125 * (1 + GetPixelValue(coord))), (byte)(125 * (1 + GetPixelValue(coord)))));
         }
-        protected Canvas panel;
-        protected double scale;
-        protected double verticalOffset;
-        protected double horizontalOffset;
         public void SetPanel(System.Windows.Controls.Canvas panel)
         {
             this.panel = panel;

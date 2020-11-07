@@ -77,27 +77,27 @@ namespace Capstone
             brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
             await brick.BatchCommand.SendCommandAsync();
         }
-        void OnBrickChanged(object sender, BrickChangedEventArgs e)
+        public void OnBrickChanged(object sender, BrickChangedEventArgs e)
         {
             foreach (var port in Enum.GetValues(typeof(InputPort)))
             {
-                switch (e.Ports[(InputPort)port].Type)
+                switch (brick.Ports[(InputPort)port].Type)
                 {
                     case DeviceType.Gyroscope:
                         //Debug.WriteLine(e.Ports[(InputPort)port].SIValue);
-                        UpdateGyroValue(e.Ports[(InputPort)port]);
+                        UpdateGyroValue(brick.Ports[(InputPort)port]);
                         break;
                     case DeviceType.Infrared:
-                        UpdateInfraredValue(e.Ports[(InputPort)port]);
+                        UpdateInfraredValue(brick.Ports[(InputPort)port]);
                         break;
                     case DeviceType.Ultrasonic:
-                        UpdateUltrasonicValue(e.Ports[(InputPort)port]);
+                        UpdateUltrasonicValue(brick.Ports[(InputPort)port]);
                         break;
                 }
             }
-            UpdateRotaionSensor(e.Ports[InputPortFromOutputPort(leftDrive)], true);
+            UpdateRotaionSensor(brick.Ports[InputPortFromOutputPort(leftDrive)], true);
             //right motor is updated last
-            UpdateRotaionSensor(e.Ports[InputPortFromOutputPort(rightDrive)], false);
+            UpdateRotaionSensor(brick.Ports[InputPortFromOutputPort(rightDrive)], false);
         }
         private InputPort InputPortFromOutputPort(OutputPort outputPort)
         {

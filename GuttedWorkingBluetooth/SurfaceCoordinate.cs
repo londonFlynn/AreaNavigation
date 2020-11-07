@@ -2,8 +2,8 @@
 {
     public class SurfaceCoordinate
     {
-        public readonly int VerticalCoorindate;
-        public readonly int HorizontalCoordinate;
+        public int VerticalCoorindate;
+        public int HorizontalCoordinate;
         public SurfaceCoordinate(int horizontalCoordinate, int verticalCoordinate)
         {
             this.VerticalCoorindate = verticalCoordinate;

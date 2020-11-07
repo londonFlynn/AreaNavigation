@@ -34,16 +34,81 @@ namespace Capstone
             result = result || (o4 == 0 && OnSegment(p2, q1, q2));
             return result;
         }
-        public static double DistanceBetweenPointAndLine(Vector2d<double> point, Vector2d<double> p1, Vector2d<double> q1)
+        public static bool PointIsWithinPolygon(Vector2d<double> point, Vector2d<double>[] polygon)
         {
-            var lengthSqaured = Math.Pow(p1.x - q1.x, 2) + Math.Pow(p1.y - q1.y, 2);
-            if (lengthSqaured == 0)
+            if (polygon.Length < 3)
             {
-                return Math.Sqrt(Math.Pow(p1.x - point.x, 2) + Math.Pow(p1.y - point.y, 2));
+                throw new ArgumentException("Polygon must have at least 3 verticies");
             }
-            var t = Math.Max(0, Math.Min(1, (point - p1).Dot((q1 - p1)) / lengthSqaured));
-            var projection = p1 + (q1 - p1) * t;
-            return Math.Sqrt(Math.Pow(p1.x - projection.x, 2) + Math.Pow(p1.y - projection.y, 2));
+            Vector2d<double> infinity = new Vector2d<double>(new double[] { point.x, double.MaxValue });
+            int countOfCrossings = 0;
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                int next = i + 1 == polygon.Length ? 0 : i + 1;
+                if (Intersect(point, infinity, polygon[i], polygon[next]))
+                {
+                    countOfCrossings++;
+                }
+            }
+            return countOfCrossings % 2 == 1;
+        }
+        //public static double DistanceBetweenPointAndLine(Vector2d<double> point, Vector2d<double> p1, Vector2d<double> q1)
+        //{
+        //    var lengthSqaured = Math.Pow(p1.x - q1.x, 2) + Math.Pow(p1.y - q1.y, 2);
+        //    if (lengthSqaured == 0)
+        //    {
+        //        return Math.Sqrt(Math.Pow(p1.x - point.x, 2) + Math.Pow(p1.y - point.y, 2));
+        //    }
+        //    var t = Math.Max(0, Math.Min(1, (point - p1).Dot((q1 - p1)) / lengthSqaured));
+        //    var projection = p1 + (q1 - p1) * t;
+        //    return Math.Sqrt(Math.Pow(p1.x - projection.x, 2) + Math.Pow(p1.y - projection.y, 2));
+        //}
+        public static double DistanceBetweenPointAndLine(Vector2d<double> E, Vector2d<double> A, Vector2d<double> B)
+        {
+
+            // vector AB 
+            Vector2d<double> AB = B - A;
+
+            // vector BP 
+            Vector2d<double> BE = E - B;
+
+            // vector AP 
+            Vector2d<double> AE = E - A;
+
+            // Variables to store dot product 
+            double AB_BE, AB_AE;
+
+            // Calculating the dot product 
+            AB_BE = AB.Dot(BE);
+            AB_AE = AB.Dot(AE);
+
+            // Minimum distance from 
+            // point E to the line segment 
+            double reqAns = 0;
+
+            // Case 1 
+            if (AB_BE > 0)
+            {
+                reqAns = BE.Magnitude();
+            }
+
+            // Case 2 
+            else if (AB_AE < 0)
+            {
+                reqAns = AE.Magnitude();
+            }
+
+            // Case 3 
+            else
+            {
+                double mod = AB.Magnitude();
+                reqAns = Math.Abs(AB.x * AE.y - AB.y * AE.x) / mod;
+            }
+            return reqAns;
+        }
+        public static double DistanceBetweenPoints(Vector2d<double> pointA, Vector2d<double> pointB)
+        {
+            return Math.Abs((pointA - pointB).Magnitude());
         }
     }
 }

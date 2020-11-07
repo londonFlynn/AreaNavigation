@@ -15,13 +15,11 @@
             Gyro.SubsribeToNewReadings(this);
             LeftMotor.SubsribeToNewReadings(this);
             RightMotor.SubsribeToNewReadings(this);
-
             this.Shape = new Vector2d<double>[4];
             this.Shape[0] = new Vector2d<double>(new double[] { 11.5, 15, 0, 0 });
             this.Shape[1] = new Vector2d<double>(new double[] { 11.5, -14, 0, 0 });
             this.Shape[2] = new Vector2d<double>(new double[] { -11.5, -14, 0, 0 });
             this.Shape[3] = new Vector2d<double>(new double[] { -11.5, 15, 0, 0 });
-
         }
 
     }

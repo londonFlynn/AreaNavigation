@@ -60,12 +60,34 @@ namespace Capstone
         {
             return $"({array[0]},{array[1]})";
         }
+        public override bool Equals(object obj)
+        {
+            if (obj is Vector2d<T>)
+            {
+                var that = obj as Vector2d<T>;
+                return this.x.Equals(that.x) && this.y.Equals(that.y);
+            }
+            return false;
+        }
+        public override int GetHashCode()
+        {
+            var hashCode = 352033288;
+            hashCode = hashCode * -1521134295 + x.GetHashCode();
+            hashCode = hashCode * -1521134295 + y.GetHashCode();
+            return hashCode;
+        }
 
         public double Magnitude()
         {
             dynamic x1 = x;
             dynamic y1 = y;
             return Math.Sqrt((x1 * x1) + (y1 * y1));
+        }
+        public Vector2d<T> Unit()
+        {
+            dynamic X = this.x;
+            dynamic Y = this.y;
+            return new Vector2d<T>(new T[] { X / Magnitude(), Y / Magnitude() });
         }
         public double Dot(Vector2d<T> that)
         {

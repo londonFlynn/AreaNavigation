@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,33 +11,18 @@ namespace Capstone
     /// </summary>
     public partial class MainWindow : Window, ListenToDispalyChanged
     {
-
-        //public MainPage()
-        //{
-        //    InitializeComponent();
-        //    BrickSetup();
-        //}
-        //static async void BrickSetup()
-        //{
-        //    var coms = new Lego.Ev3.Desktop.BluetoothCommunication("COM3");
-        //    var brick = new Brick(coms);
-        //    brick.BrickChanged += OnBrickChanged;
-        //    Debug.WriteLine("Attempting to connect to brick...");
-        //    await brick.ConnectAsync();
-        //    Debug.WriteLine("Brick connection successful");
-        //    Debug.WriteLine(brick.Ports[InputPort.One].SIValue);
-        //}
-        //static void OnBrickChanged(object sender, BrickChangedEventArgs e)
-        //{
-        //    // print out the value of the sensor on Port 1 (more on this later...)
-        //    Debug.WriteLine(e.Ports[InputPort.One].SIValue);
-        //}
         ProgramManager ProgramManager;
         List<IDisplayable> DisplayedItems = new List<IDisplayable>();
         public MainWindow()
         {
             this.InitializeComponent();
             this.ProgramManager = new ProgramManager(this);
+            InputManager.Current.PreProcessInput += (sender, e) =>
+            {
+                if (e.StagingItem.Input is MouseButtonEventArgs)
+                    GlobalClickEventHandler(sender,
+                      (MouseButtonEventArgs)e.StagingItem.Input);
+            };
         }
         private double recentScale = 1;
         private double recentVOffset = 0;
@@ -118,6 +104,8 @@ namespace Capstone
         }
         public void HearDisplayChanged()
         {
+            //if (!(this.ProgramManager is null) && !(this.ProgramManager.Robot is null))
+            //    this.ProgramManager.Robot.BringToFront();
             var offset = GenerateOffset();
             var scale = GenerateScale();
             if (offset[0] != recentHOffset || offset[1] != recentVOffset || recentScale != scale)
@@ -129,10 +117,56 @@ namespace Capstone
             }
         }
 
+
+        private void GlobalClickEventHandler(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                DisplayPath(e);
+            }
+        }
+        private async void DisplayPath(MouseButtonEventArgs e)
+        {
+            StopDisplayingPaths();
+            var point = GetClickedPoint(e);
+            //Debug.WriteLine(point);
+            var path = await ProgramManager.PathFromRobotToPoint(point);
+            //Debug.WriteLine(point);
+            if (path is null)
+            {
+                Debug.WriteLine("There is not a path to that point");
+            }
+            else
+            {
+                Debug.WriteLine("Displaying Path");
+                AddDisplayItem(path);
+            }
+        }
+        private void StopDisplayingPaths()
+        {
+            for (int i = 0; i < DisplayedItems.Count; i++)
+            {
+                if (DisplayedItems[i] is NetworkPath)
+                {
+                    RemoveDisplayedItem(DisplayedItems[i]);
+                    i--;
+                }
+            }
+        }
+
+
+        private Vector2d<double> GetClickedPoint(MouseButtonEventArgs e)
+        {
+            var point = e.GetPosition((this.FindName("MapCanvas") as Canvas));
+            return new Vector2d<double>(new double[] { (point.X / recentScale) + recentHOffset, (point.Y / recentScale) + recentVOffset });
+        }
+
+
         private bool UpIsPressed { get; set; }
         private bool DownIsPressed { get; set; }
         private bool LeftIsPressed { get; set; }
         private bool RightIsPressed { get; set; }
+        private bool F1IsPressed { get; set; }
         private void UpdateMovmentState()
         {
             MovementCommandState state = MovementCommandState.NEUTRAL;
@@ -149,6 +183,7 @@ namespace Capstone
         }
         void CoreWindow_KeyDown(object sender, KeyEventArgs e)
         {
+            bool F1wasPressed = F1IsPressed;
             switch (e.Key)
             {
                 case Key.Left:
@@ -163,11 +198,17 @@ namespace Capstone
                 case Key.Down:
                     DownIsPressed = true;
                     break;
+                case Key.F1:
+                    F1IsPressed = true;
+                    break;
             }
+            if (!F1wasPressed && F1IsPressed)
+                ShowArcConfidenceSegments();
             UpdateMovmentState();
         }
         void CoreWindow_KeyUp(object sender, KeyEventArgs e)
         {
+            bool F1WasPressed = F1IsPressed;
             switch (e.Key)
             {
                 case Key.Left:
@@ -182,8 +223,42 @@ namespace Capstone
                 case Key.Down:
                     DownIsPressed = false;
                     break;
+                case Key.F1:
+                    F1IsPressed = false;
+                    break;
+            }
+            if (F1WasPressed && !F1IsPressed)
+            {
+                HideArcConfidenceSegments();
             }
             UpdateMovmentState();
+        }
+        private void ShowArcConfidenceSegments()
+        {
+            //Debug.WriteLine("Showing arc segmants");
+            //HideArcConfidenceSegments();
+            if (!(ProgramManager.Robot.USSensor.GetCurrentReading() is null))
+            {
+                var arcs = ProgramManager.ContructedMap.ObstacleSurface.GetConfidenceArcSegmants((ProgramManager.Robot.USSensor.GetCurrentReading() as RangeReading).SensorPosition);
+                //Debug.WriteLine($"Recived {arcs.Count} arc segmants");
+                foreach (var arc in arcs)
+                {
+
+                    AddDisplayItem(arc);
+                }
+            }
+        }
+        private void HideArcConfidenceSegments()
+        {
+            //Debug.WriteLine("Hiding arc segmants");
+            for (int i = 0; i < DisplayedItems.Count; i++)
+            {
+                if (DisplayedItems[i] is ArcSegmentConfidence)
+                {
+                    RemoveDisplayedItem(DisplayedItems[i]);
+                    i--;
+                }
+            }
         }
 
     }

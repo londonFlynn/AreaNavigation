@@ -1,18 +1,61 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Timers;
 
 namespace Capstone
 {
-    public class ContructedMap : Map, ISensorReadingSubsriber
+    public class ContructedMap : Map, ISensorReadingSubsriber, ISubscribesToRobotPostionChange
     {
         public List<RangeReading> RangeReadings = new List<RangeReading>();
+        public List<PositionOccupiedByRobotMemory> PosOccupied = new List<PositionOccupiedByRobotMemory>();
         private Robot Robot;
-        private ObstacleSurface ObstacleSurface;
+        public ObstacleSurface ObstacleSurface;
+        private Random Random = new Random();
+
         public ContructedMap(Robot robot)
         {
             this.Robot = robot;
             robot.USSensor.SubsribeToNewReadings(this);
             robot.IRSensor.SubsribeToNewReadings(this);
-            this.ObstacleSurface = new ObstacleSurface(3, 200, 200);
+            robot.SubscribeToRobotPositionChange(this);
+            this.ObstacleSurface = new ObstacleSurface(3, 150, 150);
+            StartRandomResamplings();
+        }
+        private void StartRandomResamplings()
+        {
+            var timer = new System.Timers.Timer();
+            timer.Elapsed += new ElapsedEventHandler(DoRandomResampling);
+            timer.Interval = 50;
+            timer.Enabled = true;
+        }
+        private void DoRandomResampling(object source, ElapsedEventArgs e)
+        {
+            RandomlyResampleRangeReading();
+            RandomlyResamplePastPosition();
+        }
+        private void RandomlyResampleRangeReading()
+        {
+            if (RangeReadings.Count > 0)
+            {
+                int index = Random.Next(RangeReadings.Count);
+                ObstacleSurface.MatchToRangeReading(RangeReadings[index], 0.125, false);
+
+            }
+        }
+        private void RandomlyResamplePastPosition()
+        {
+            if (PosOccupied.Count > 0)
+            {
+                int index = Random.Next(PosOccupied.Count);
+                ObstacleSurface.MatchToAreaEmptyReading(PosOccupied[index], 0.25, false);
+            }
+        }
+
+        public void ReciveRobotPositionMemory(PositionOccupiedByRobotMemory mem)
+        {
+            this.PosOccupied.Add(mem);
+            ObstacleSurface.MatchToAreaEmptyReading(mem, 1);
+            this.NotifyDisplayChanged();
         }
         public void ReciveSensorReading(Sensor sensor)
         {
@@ -23,7 +66,7 @@ namespace Capstone
                 //reading.SetScale(scale, horizontalOffset, verticalOffset);
                 //reading.StartDisplay();
                 //RangeReadings.Add(reading);
-                ObstacleSurface.MatchToRangeReading(reading, 1);
+                ObstacleSurface.MatchToRangeReading(reading, 0.5);
                 this.NotifyDisplayChanged();
             }
         }
@@ -43,7 +86,7 @@ namespace Capstone
         public override void StartDisplay()
         {
             ObstacleSurface.StartDisplay();
-            Robot.StartDisplay();
+            //Robot.StartDisplay();
             foreach (var reading in RangeReadings)
             {
                 reading.StartDisplay();

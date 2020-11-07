@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -70,28 +71,48 @@ namespace Capstone
 
         private void reciveRightMotorReading(RotationSensor rotationSensor)
         {
-            var movement = this.RightMotor.DistanceLastReading / 2;
-            var moveVector = new Vector2d<double>(new double[] { 0, movement, 0, 0 });
-            var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
-            var cos = Math.Cos(angle);
-            var sin = Math.Sin(angle);
-            moveVector = new Vector2d<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
-            this.Position = this.Position + moveVector;
-            this.Orientation = angle;
-            this.UpdatePosition();
+            if (!(this.Gyro.GetCurrentReading() is null))
+            {
+                var movement = this.RightMotor.DistanceLastReading / 2;
+                var moveVector = new Vector2d<double>(new double[] { 0, movement, 0, 0 });
+                var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
+                var cos = Math.Cos(angle);
+                var sin = Math.Sin(angle);
+                moveVector = new Vector2d<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
+                this.Position = this.Position + moveVector;
+                this.Orientation = angle;
+                this.UpdatePosition();
+            }
         }
 
         private void reciveLeftMotorReading(RotationSensor rotationSensor)
         {
-            var movement = this.LeftMotor.DistanceLastReading / 2;
-            var moveVector = new Vector2d<double>(new double[] { 0, movement, 0, 0 });
-            var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
-            var cos = Math.Cos(angle);
-            var sin = Math.Sin(angle);
-            moveVector = new Vector2d<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
-            this.Position = this.Position + moveVector;
-            this.Orientation = angle;
-            this.UpdatePosition();
+            if (!(this.Gyro.GetCurrentReading() is null))
+            {
+
+                var movement = this.LeftMotor.DistanceLastReading / 2;
+                var moveVector = new Vector2d<double>(new double[] { 0, movement, 0, 0 });
+                var angle = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
+                var cos = Math.Cos(angle);
+                var sin = Math.Sin(angle);
+                moveVector = new Vector2d<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
+                this.Position = this.Position + moveVector;
+                this.Orientation = angle;
+                this.UpdatePosition();
+            }
+        }
+        public double MaxiumDistanceFromCenter
+        {
+            get
+            {
+                var max = 0d;
+                foreach (var point in this.Shape)
+                {
+                    var magnitude = point.Magnitude();
+                    max = magnitude > max ? magnitude : max;
+                }
+                return max;
+            }
         }
 
         private void ReciveGyroReading(GyroscopeSensor sensor)
@@ -99,11 +120,35 @@ namespace Capstone
             this.Orientation = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
             this.UpdatePosition();
         }
+        private DateTime LastPositionReadingTime = DateTime.Now;
+        private bool startPositionCheck = false;
         protected virtual void UpdatePosition()
         {
             this.UpdateDisplay();
-            Debug.WriteLine($"updating position: X={this.Position[0]}, Y={this.Position[1]}, Angle in Radians = {this.Orientation}");
+            if (startPositionCheck)
+            {
+                if (DateTime.Now - LastPositionReadingTime >= TimeSpan.FromMilliseconds(100))
+                    foreach (var subscriber in subscribesToRobotPostionChange)
+                    {
+                        LastPositionReadingTime = DateTime.Now;
+                        subscriber.ReciveRobotPositionMemory(new PositionOccupiedByRobotMemory(this.FullRobotPosition()));
+                    }
+            }
+            else
+            {
+                startPositionCheck = true;
+            }
+            //Debug.WriteLine($"updating position: X={this.Position[0]}, Y={this.Position[1]}, Angle in Radians = {this.Orientation}");
             this.NotifyDisplayChanged();
+        }
+        List<ISubscribesToRobotPostionChange> subscribesToRobotPostionChange = new List<ISubscribesToRobotPostionChange>();
+        public void SubscribeToRobotPositionChange(ISubscribesToRobotPostionChange subscribes)
+        {
+            subscribesToRobotPostionChange.Add(subscribes);
+        }
+        public void UnsubscribeToRobotPositionChange(ISubscribesToRobotPostionChange subscribes)
+        {
+            subscribesToRobotPostionChange.Remove(subscribes);
         }
 
 
@@ -115,9 +160,12 @@ namespace Capstone
         public virtual void StartDisplay()
         {
             DisplayedRobot = new Polygon();
-            DisplayedRobot.Fill = new SolidColorBrush(Colors.LightBlue);
+            DisplayedRobot.Fill = new SolidColorBrush(Color.FromArgb(200, 200, 200, 255));
             UpdateDisplay();
             panel.Children.Add(DisplayedRobot);
+
+            Debug.WriteLine("Starting to display robot");
+            Canvas.SetZIndex(DisplayedRobot, 1);
         }
         public virtual void UpdateDisplay()
         {
@@ -128,6 +176,36 @@ namespace Capstone
             }
             DisplayedRobot.Points = points;
         }
+        //public void BringToFront()
+        //{
+        //    try
+        //    {
+        //        var pParent = panel;
+        //        var pToMove = DisplayedRobot;
+        //        int currentIndex = Canvas.GetZIndex(pToMove);
+        //        int zIndex = 0;
+        //        int maxZ = 0;
+        //        UserControl child;
+        //        for (int i = 0; i < pParent.Children.Count; i++)
+        //        {
+        //            if (pParent.Children[i] is UserControl &&
+        //                pParent.Children[i] != pToMove)
+        //            {
+        //                child = pParent.Children[i] as UserControl;
+        //                zIndex = Canvas.GetZIndex(child);
+        //                maxZ = Math.Max(maxZ, zIndex);
+        //                if (zIndex > currentIndex)
+        //                {
+        //                    Canvas.SetZIndex(child, zIndex - 1);
+        //                }
+        //            }
+        //        }
+        //        Canvas.SetZIndex(pToMove, maxZ);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //    }
+        //}
 
         public double TopMostPosition()
         {
