@@ -71,33 +71,33 @@ namespace Capstone
                     rightPower = -power;
                     break;
             }
-            //await brick.DirectCommand.TurnMotorAtPowerForTimeAsync(leftDrive, (int)(leftPower * 100), 100, false);
-            //await brick.DirectCommand.TurnMotorAtPowerForTimeAsync(rightDrive, (int)(rightPower * 100), 100, false);
-            brick.BatchCommand.TurnMotorAtPowerForTime(leftDrive, (int)(leftPower * 100), 100, false);
-            brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
-            await brick.BatchCommand.SendCommandAsync();
+            await brick.DirectCommand.TurnMotorAtPowerAsync(leftDrive, (int)(leftPower * 100));
+            await brick.DirectCommand.TurnMotorAtPowerAsync(rightDrive, (int)(rightPower * 100));
+            //brick.BatchCommand.TurnMotorAtPowerForTime(leftDrive, (int)(leftPower * 100), 100, false);
+            //brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
+            //await brick.BatchCommand.SendCommandAsync();
         }
-        void OnBrickChanged(object sender, BrickChangedEventArgs e)
+        public void OnBrickChanged(object sender, BrickChangedEventArgs e)
         {
             foreach (var port in Enum.GetValues(typeof(InputPort)))
             {
-                switch (e.Ports[(InputPort)port].Type)
+                switch (brick.Ports[(InputPort)port].Type)
                 {
                     case DeviceType.Gyroscope:
                         //Debug.WriteLine(e.Ports[(InputPort)port].SIValue);
-                        UpdateGyroValue(e.Ports[(InputPort)port]);
+                        UpdateGyroValue(brick.Ports[(InputPort)port]);
                         break;
                     case DeviceType.Infrared:
-                        UpdateInfraredValue(e.Ports[(InputPort)port]);
+                        UpdateInfraredValue(brick.Ports[(InputPort)port]);
                         break;
                     case DeviceType.Ultrasonic:
-                        UpdateUltrasonicValue(e.Ports[(InputPort)port]);
+                        UpdateUltrasonicValue(brick.Ports[(InputPort)port]);
                         break;
                 }
             }
-            UpdateRotaionSensor(e.Ports[InputPortFromOutputPort(leftDrive)], true);
+            UpdateRotaionSensor(brick.Ports[InputPortFromOutputPort(leftDrive)], true);
             //right motor is updated last
-            UpdateRotaionSensor(e.Ports[InputPortFromOutputPort(rightDrive)], false);
+            UpdateRotaionSensor(brick.Ports[InputPortFromOutputPort(rightDrive)], false);
         }
         private InputPort InputPortFromOutputPort(OutputPort outputPort)
         {
@@ -148,7 +148,7 @@ namespace Capstone
                     new InfraredRangeReading(
                         InfraredDataToCM(port.RawValue),
                         Robot.IRSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, Robot.IRSensor.SensorFalloffDistance));
         }
         private double InfraredDataToCM(double data)
         {
@@ -163,12 +163,12 @@ namespace Capstone
         }
         private void UpdateUltrasonicValue(Port port)
         {
-            if (!(Robot.USSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1 && port.RawValue < 1200)
+            if (!(Robot.USSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
                 Robot.USSensor.SetRecentReading(
                     new UltrasonicRangeReading(
                         (port.RawValue + 0d) / 10,
                         Robot.USSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, Robot.USSensor.SensorFalloffDistance));
         }
         public override void StartGettingSensorReadings(Sensor sensor)
         {

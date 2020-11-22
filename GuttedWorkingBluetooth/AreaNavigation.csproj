@@ -58,8 +58,17 @@
     </ApplicationDefinition>
     <Compile Include="AccelerometerReading.cs" />
     <Compile Include="AccelerometerSensor.cs" />
+    <Compile Include="ArcSegment.cs" />
+    <Compile Include="ArcSegmentConfidence.cs" />
+    <Compile Include="MoveDistanceController.cs" />
+    <Compile Include="MovementControl.cs" />
+    <Compile Include="MoveToDestinationController.cs" />
+    <Compile Include="MoveDirectlyToPositionController.cs" />
+    <Compile Include="MoveToExploreArcController.cs" />
+    <Compile Include="NetworkGenerator.cs" />
+    <Compile Include="PathTrimer.cs" />
+    <Compile Include="PositionOccupiedByRobotMemory.cs" />
     <Compile Include="ContructedMap.cs" />
-    <Compile Include="ContructedWall.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="EV3Communication.cs" />
     <Compile Include="EV3Robot.cs" />
@@ -69,12 +78,14 @@
     <Compile Include="InfraredRangeReading.cs" />
     <Compile Include="InfraredSensor.cs" />
     <Compile Include="ISensorReadingSubsriber.cs" />
+    <Compile Include="LineTool.cs" />
     <Compile Include="ListenToDispalyChanged.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MovementCommandState.cs" />
     <Compile Include="NetworkNode.cs" />
-    <Compile Include="PathNetwork.cs" />
-    <Compile Include="PathRoute.cs" />
+    <Compile Include="ObstacleSurface.cs" />
+    <Compile Include="Network.cs" />
+    <Compile Include="NetworkPath.cs" />
     <Compile Include="ProgramManager.cs" />
     <Compile Include="RangeReading.cs" />
     <Compile Include="RangeSensor.cs" />
@@ -85,15 +96,12 @@
     <Compile Include="RotationSensorReading.cs" />
     <Compile Include="Sensor.cs" />
     <Compile Include="SensorReading.cs" />
-    <Compile Include="SimulatedCommunication.cs" />
-    <Compile Include="SimulatedMap.cs" />
-    <Compile Include="SimulatedRobot.cs" />
-    <Compile Include="SimulatedWall.cs" />
-    <Compile Include="SimulationManager.cs" />
+    <Compile Include="ISubscribesToRobotPostionChange.cs" />
+    <Compile Include="SurfaceCoordinate.cs" />
+    <Compile Include="MoveToAngleController.cs" />
     <Compile Include="UltrasonicRangeReading.cs" />
     <Compile Include="UltrasonicSensor.cs" />
     <Compile Include="Vector2d.cs" />
-    <Compile Include="Wall.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

@@ -1,10 +1,10 @@
-﻿namespace Capstone
-{
-    public enum Direction
-    {
-        Forward,
-        Backward,
-        Left,
-        Right
-    }
-}
+﻿//namespace Capstone
+//{
+//    public enum Direction
+//    {
+//        Forward,
+//        Backward,
+//        Left,
+//        Right
+//    }
+//}
