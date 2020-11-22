@@ -7,7 +7,7 @@
     <ProjectGuid>{0B140421-4421-4673-972F-7FFB6268F0DC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SampleApp</RootNamespace>
+    <RootNamespace>Capstone</RootNamespace>
     <AssemblyName>SampleApp %28WPF%29</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -56,52 +56,49 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AccelerometerReading.cs" />
-    <Compile Include="AccelerometerSensor.cs" />
     <Compile Include="ArcSegment.cs" />
     <Compile Include="ArcSegmentConfidence.cs" />
-    <Compile Include="MoveDistanceController.cs" />
-    <Compile Include="MovementControl.cs" />
-    <Compile Include="MoveToDestinationController.cs" />
-    <Compile Include="MoveDirectlyToPositionController.cs" />
-    <Compile Include="MoveToExploreArcController.cs" />
-    <Compile Include="NetworkGenerator.cs" />
-    <Compile Include="PathTrimer.cs" />
-    <Compile Include="PositionOccupiedByRobotMemory.cs" />
-    <Compile Include="ContructedMap.cs" />
-    <Compile Include="Direction.cs" />
-    <Compile Include="EV3Communication.cs" />
-    <Compile Include="EV3Robot.cs" />
-    <Compile Include="GyroscopeReading.cs" />
-    <Compile Include="GyroscopeSensor.cs" />
+    <Compile Include="MovementControl\MoveDistanceController.cs" />
+    <Compile Include="MovementControl\MovementControl.cs" />
+    <Compile Include="MovementControl\MoveToDestinationController.cs" />
+    <Compile Include="MovementControl\MoveDirectlyToPositionController.cs" />
+    <Compile Include="MovementControl\MoveToExploreArcController.cs" />
+    <Compile Include="Network\NetworkGenerator.cs" />
+    <Compile Include="Network\PathTrimer.cs" />
+    <Compile Include="Sensor\SensorReadings\PositionOccupiedByRobotMemory.cs" />
+    <Compile Include="ObstacleSurface\ContructedMap.cs" />
+    <Compile Include="Robot\EV3Communication.cs" />
+    <Compile Include="Robot\EV3Robot.cs" />
+    <Compile Include="Sensor\SensorReadings\GyroscopeReading.cs" />
+    <Compile Include="Sensor\GyroscopeSensor.cs" />
     <Compile Include="IDisplayable.cs" />
-    <Compile Include="InfraredRangeReading.cs" />
-    <Compile Include="InfraredSensor.cs" />
-    <Compile Include="ISensorReadingSubsriber.cs" />
-    <Compile Include="LineTool.cs" />
+    <Compile Include="Sensor\SensorReadings\InfraredRangeReading.cs" />
+    <Compile Include="Sensor\InfraredSensor.cs" />
+    <Compile Include="Sensor\ISensorReadingSubsriber.cs" />
+    <Compile Include="VectorMath\LineTool.cs" />
     <Compile Include="ListenToDispalyChanged.cs" />
-    <Compile Include="Map.cs" />
-    <Compile Include="MovementCommandState.cs" />
-    <Compile Include="NetworkNode.cs" />
-    <Compile Include="ObstacleSurface.cs" />
-    <Compile Include="Network.cs" />
-    <Compile Include="NetworkPath.cs" />
+    <Compile Include="ObstacleSurface\Map.cs" />
+    <Compile Include="MovementControl\MovementCommandState.cs" />
+    <Compile Include="Network\NetworkNode.cs" />
+    <Compile Include="ObstacleSurface\ObstacleSurface.cs" />
+    <Compile Include="Network\Network.cs" />
+    <Compile Include="Network\NetworkPath.cs" />
     <Compile Include="ProgramManager.cs" />
-    <Compile Include="RangeReading.cs" />
-    <Compile Include="RangeSensor.cs" />
-    <Compile Include="Robot.cs" />
-    <Compile Include="RoboticCommunication.cs" />
-    <Compile Include="Rotation.cs" />
-    <Compile Include="RotationSensor.cs" />
-    <Compile Include="RotationSensorReading.cs" />
-    <Compile Include="Sensor.cs" />
-    <Compile Include="SensorReading.cs" />
-    <Compile Include="ISubscribesToRobotPostionChange.cs" />
+    <Compile Include="Sensor\SensorReadings\RangeReading.cs" />
+    <Compile Include="Sensor\RangeSensor.cs" />
+    <Compile Include="Robot\Robot.cs" />
+    <Compile Include="Robot\RoboticCommunication.cs" />
+    <Compile Include="VectorMath\Rotation.cs" />
+    <Compile Include="Sensor\RotationSensor.cs" />
+    <Compile Include="Sensor\SensorReadings\RotationSensorReading.cs" />
+    <Compile Include="Sensor\Sensor.cs" />
+    <Compile Include="Sensor\SensorReadings\SensorReading.cs" />
+    <Compile Include="Robot\ISubscribesToRobotPostionChange.cs" />
     <Compile Include="SurfaceCoordinate.cs" />
-    <Compile Include="MoveToAngleController.cs" />
-    <Compile Include="UltrasonicRangeReading.cs" />
-    <Compile Include="UltrasonicSensor.cs" />
-    <Compile Include="Vector2d.cs" />
+    <Compile Include="MovementControl\MoveToAngleController.cs" />
+    <Compile Include="Sensor\SensorReadings\UltrasonicRangeReading.cs" />
+    <Compile Include="Sensor\SensorReadings\UltrasonicSensor.cs" />
+    <Compile Include="VectorMath\Vector2d.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -133,7 +130,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="docs\LEGO Mindstorms EV3 - Desktop.chm" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
