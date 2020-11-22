@@ -9,6 +9,19 @@ namespace Capstone
     {
         public double Distance { get; private set; }
         public List<NetworkNode> Route = new List<NetworkNode>();
+        public NetworkNode NodeInRouteAtPosition(Vector2d<double> position)
+        {
+            NetworkNode result = null;
+            foreach (var node in Route)
+            {
+                if (node.Position.Equals(position))
+                {
+                    result = node;
+                    break;
+                }
+            }
+            return result;
+        }
         public NetworkNode StartNode { get { return Route[0]; } }
         public NetworkNode EndNode { get { return Route[Route.Count - 1]; } }
         public NetworkPath(NetworkNode startNode, NetworkNode endNode)

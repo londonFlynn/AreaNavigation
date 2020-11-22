@@ -59,8 +59,8 @@ namespace Capstone
                         closestPath = path;
                     }
                 }
-                System.Diagnostics.Debug.WriteLine("Could not find a path to the specified point. Returning the closest path to the point instead");
-                return closestPath;
+                System.Diagnostics.Debug.WriteLine("Could not find a path to the specified point.");
+                return null;
             }
             else
             {

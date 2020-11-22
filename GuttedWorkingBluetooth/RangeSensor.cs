@@ -4,8 +4,10 @@ namespace Capstone
 {
     public abstract class RangeSensor : Sensor
     {
-        public RangeSensor(Vector2d<double> relativePosition)
+        public readonly double SensorFalloffDistance;
+        public RangeSensor(Vector2d<double> relativePosition, double sensorFalloff)
         {
+            this.SensorFalloffDistance = sensorFalloff;
             this.RelativePosition = relativePosition;
         }
         protected override bool ReadingChanged(SensorReading changedReading)

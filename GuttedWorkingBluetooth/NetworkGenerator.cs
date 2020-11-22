@@ -6,7 +6,7 @@ namespace Capstone
     {
         public ObstacleSurface ObstacleSurface;
         public double ClearRadius;
-        public const double ObstacleCertintyThreshold = 0.25;
+        public const double ObstacleCertintyThreshold = 0.8;
         public NetworkGenerator(ObstacleSurface surface, double requiredClearRadius)
         {
             this.ObstacleSurface = surface;
@@ -14,7 +14,7 @@ namespace Capstone
         }
         private int GenerateIncriment()
         {
-            return (int)System.Math.Floor(ClearRadius / ObstacleSurface.CMPerPixel);
+            return (int)System.Math.Floor(ClearRadius / (ObstacleSurface.CMPerPixel));
         }
         public Network GeneratePathNetwork()
         {

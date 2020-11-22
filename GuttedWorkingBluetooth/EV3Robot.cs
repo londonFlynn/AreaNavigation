@@ -9,8 +9,8 @@
             this.Gyro = new GyroscopeSensor();
             this.LeftMotor = new RotationSensor(true, 1.5);
             this.RightMotor = new RotationSensor(false, 1.6);
-            this.IRSensor = new InfraredSensor(new Vector2d<double>(new double[] { 5, 0, 0, 0 }));
-            this.USSensor = new UltrasonicSensor(new Vector2d<double>(new double[] { -5, 0, 0, 0 }));
+            this.IRSensor = new InfraredSensor(new Vector2d<double>(new double[] { 5, 0, 0, 0 }), 120);
+            this.USSensor = new UltrasonicSensor(new Vector2d<double>(new double[] { -5, 0, 0, 0 }), 120);
             this.RoboticCommunication = new EV3Communication(this);
             Gyro.SubsribeToNewReadings(this);
             LeftMotor.SubsribeToNewReadings(this);

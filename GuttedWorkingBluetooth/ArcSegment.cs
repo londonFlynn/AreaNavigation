@@ -17,7 +17,8 @@ namespace Capstone
             this.Position = position;
             this.RaySegmant = ray;
         }
-
+        public double FinalAngleA { get { return RaySegmant.Angle(); } }
+        public double FinalAngleB { get { return RaySegmant.Angle() + AngleInRadians; } }
 
 
 
@@ -28,21 +29,24 @@ namespace Capstone
         protected System.Windows.Shapes.Polygon DisplayTriangle;
         public virtual void StartDisplay()
         {
-            var displayArc = new System.Windows.Media.ArcSegment();
-            var figure = new System.Windows.Media.PathFigure();
-            figure.Segments.Add(displayArc);
-            var geometry = new System.Windows.Media.PathGeometry();
-            geometry.Figures.Add(figure);
-            DisplayPath = new System.Windows.Shapes.Path();
-            DisplayPath.Data = geometry;
-            DisplayPath.Fill = new SolidColorBrush(Color.FromArgb(155, 0, 0, 255));
-            DisplayTriangle = new System.Windows.Shapes.Polygon();
-            DisplayTriangle.Fill = DisplayPath.Fill;
-            Canvas.SetZIndex(DisplayTriangle, 0);
-            panel.Children.Add(DisplayPath);
-            Canvas.SetZIndex(DisplayTriangle, 0);
-            panel.Children.Add(DisplayTriangle);
-            UpdateDisplay();
+            if (!(this.panel is null))
+            {
+                var displayArc = new System.Windows.Media.ArcSegment();
+                var figure = new System.Windows.Media.PathFigure();
+                figure.Segments.Add(displayArc);
+                var geometry = new System.Windows.Media.PathGeometry();
+                geometry.Figures.Add(figure);
+                DisplayPath = new System.Windows.Shapes.Path();
+                DisplayPath.Data = geometry;
+                DisplayPath.Fill = new SolidColorBrush(Color.FromArgb(155, 0, 0, 255));
+                DisplayTriangle = new System.Windows.Shapes.Polygon();
+                DisplayTriangle.Fill = DisplayPath.Fill;
+                Canvas.SetZIndex(DisplayTriangle, 0);
+                panel.Children.Add(DisplayPath);
+                Canvas.SetZIndex(DisplayTriangle, 0);
+                panel.Children.Add(DisplayTriangle);
+                UpdateDisplay();
+            }
         }
         public virtual void UpdateDisplay()
         {
@@ -84,10 +88,10 @@ namespace Capstone
                 }
             }
         }
-        protected Canvas panel;
-        protected double scale;
-        protected double verticalOffset;
-        protected double horizontalOffset;
+        public Canvas panel;
+        public double scale;
+        public double verticalOffset;
+        public double horizontalOffset;
         public void SetPanel(System.Windows.Controls.Canvas panel)
         {
             this.panel = panel;
@@ -129,7 +133,7 @@ namespace Capstone
                 listener.HearDisplayChanged();
             }
         }
-        private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
+        public List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
         public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
         {
             listeners.Add(listener);
@@ -144,8 +148,17 @@ namespace Capstone
         }
         public void StopDisplaying()
         {
-            panel.Children.Remove(DisplayPath);
-            panel.Children.Remove(DisplayTriangle);
+            if (!(panel is null))
+            {
+                if (panel.Children.Contains(DisplayPath))
+                {
+                    panel.Children.Remove(DisplayPath);
+                }
+                if (panel.Children.Contains(DisplayTriangle))
+                {
+                    panel.Children.Remove(DisplayTriangle);
+                }
+            }
         }
 
     }

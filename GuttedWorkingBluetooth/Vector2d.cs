@@ -89,6 +89,16 @@ namespace Capstone
             dynamic Y = this.y;
             return new Vector2d<T>(new T[] { X / Magnitude(), Y / Magnitude() });
         }
+        public double Angle()
+        {
+            dynamic ax = x;
+            dynamic ay = y;
+            return Math.Atan2(ay, ax) - (System.Math.PI / 2);
+        }
+        //public Vector2d<T> Unit()
+        //{
+        //    return this / this.Magnitude()
+        //}
         public double Dot(Vector2d<T> that)
         {
             dynamic ax = x;

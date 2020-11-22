@@ -11,6 +11,7 @@ namespace Capstone
         public readonly Vector2d<double> DistanceVector;
         public readonly double Distance;
         public int TimesSampled = 0;
+        public readonly double SensorFalloffDistance;
         public Vector2d<double> ReadingPosition
         {
             get
@@ -19,8 +20,9 @@ namespace Capstone
             }
 
         }
-        public RangeReading(double distance, Vector2d<double> sensorPosition, double angle)
+        public RangeReading(double distance, Vector2d<double> sensorPosition, double angle, double sensorFalloff)
         {
+            this.SensorFalloffDistance = sensorFalloff;
             this.SensorPosition = sensorPosition;
             this.Distance = distance;
             var v = new Vector2d<double>(new double[] { 0, distance, 0, 0 });

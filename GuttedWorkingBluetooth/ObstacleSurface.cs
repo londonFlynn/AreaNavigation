@@ -14,7 +14,8 @@ namespace Capstone
         public int Height { get { return PixelMapping[0].Length; } }
         public const double ReadingRadius = 6.5;
         public const double ReadingNegativeRadius = 6.5;
-        public const double SensorFalloffDistance = 120;
+        private const double AngleIncriment = Math.PI / 15;
+
         public ObstacleSurface(double cmPerPixel, int resolutionWidth, int resolutionHeight)
         {
             this.CMPerPixel = cmPerPixel;
@@ -24,56 +25,55 @@ namespace Capstone
                 PixelMapping[i] = new double[resolutionHeight];
             }
         }
-
         public void MatchToRangeReading(RangeReading reading, double amount, bool update = true)
         {
             //TODO Smooth trasitioning
             var endpoint = reading.ReadingPosition;
             var startPoint = reading.SensorPosition;
             List<SurfaceCoordinate> decrease;
-            if (reading.Distance < SensorFalloffDistance)
+            if (reading.Distance < reading.SensorFalloffDistance)
             {
                 var increase = CellsWithinRadiusOfPoint(endpoint * ((endpoint.Magnitude() + (ReadingRadius / 2)) / endpoint.Magnitude()), ReadingRadius);
                 decrease = CellsWithinDistanceOfLineSegmant(endpoint, startPoint, ReadingNegativeRadius);
                 decrease.RemoveAll(x => increase.Any(y => y.Equals(x)));
                 foreach (var cell in increase)
                 {
-                    AdjustRangeReadingObstacleValueForCell(cell, endpoint, startPoint, amount);
+                    AdjustRangeReadingObstacleValueForCell(cell, endpoint, startPoint, amount, reading.SensorFalloffDistance);
                     SurfaceUpdateQueue.Add(cell);
                 }
             }
             else
             {
-                var point = reading.SensorPosition + (reading.DistanceVector.Unit() * (SensorFalloffDistance / 2));
+                var point = reading.SensorPosition + (reading.DistanceVector.Unit() * (reading.SensorFalloffDistance / 2));
                 endpoint = point;
                 decrease = CellsWithinDistanceOfLineSegmant(endpoint, startPoint, ReadingNegativeRadius);
             }
             foreach (var cell in decrease)
             {
-                AdjustRangeReadingNoObstacleValueForCell(cell, endpoint, startPoint, amount);
+                AdjustRangeReadingNoObstacleValueForCell(cell, endpoint, startPoint, amount, reading.SensorFalloffDistance);
                 SurfaceUpdateQueue.Add(cell);
             }
             if (update)
                 UpdateDisplayColors();
         }
-        private void AdjustRangeReadingObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer)
+        private void AdjustRangeReadingObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer, double sensorFalloffDistance)
         {
 
             var CurrentValue = GetPixelValue(cell);
             var DistanceFromReading = DistanceBetweenGridCellAndPoint(cell, readingPosition);
             var DistanceFromSensor = LineTool.DistanceBetweenPoints(CenterOfCell(cell), SensorPostion);
-            var DistanceFromSensorScale = Math.Max(0, -((1d / SensorFalloffDistance) * DistanceFromSensor) + 1);
+            var DistanceFromSensorScale = Math.Max(0, -((1d / sensorFalloffDistance) * DistanceFromSensor) + 1);
             var DistanceFromReadingScale = Math.Max(0, -((1d / ReadingNegativeRadius) * DistanceFromReading) + 1);
             var ReadingChanged = Math.Min(1, 2 * DistanceFromSensorScale * DistanceFromReadingScale * scaleModifer);
             var ChangedValue = CurrentValue + ReadingChanged > 1 ? 1 : CurrentValue + ReadingChanged;
             SetPixelValue(cell, ChangedValue);
         }
-        private void AdjustRangeReadingNoObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer)
+        private void AdjustRangeReadingNoObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer, double sensorFalloffDistance)
         {
             var CurrentValue = GetPixelValue(cell);
             var DistanceFromReading = DistanceBetweenGridCellAndLineSegmant(cell, SensorPostion, readingPosition);
             var DistanceFromSensor = LineTool.DistanceBetweenPoints(CenterOfCell(cell), SensorPostion);
-            var DistanceFromSensorScale = Math.Max(0, -((1d / SensorFalloffDistance) * DistanceFromSensor) + 1);
+            var DistanceFromSensorScale = Math.Max(0, -((1d / sensorFalloffDistance) * DistanceFromSensor) + 1);
             var DistanceFromReadingScale = Math.Max(0, -((1d / ReadingNegativeRadius) * DistanceFromReading) + 1);
             var ReadingChanged = Math.Min(1, 2 * DistanceFromSensorScale * DistanceFromReadingScale * scaleModifer);
             var ChangedValue = CurrentValue - ReadingChanged < -1 ? -1 : CurrentValue - ReadingChanged;
@@ -347,23 +347,22 @@ namespace Capstone
         {
             return LineTool.PointIsWithinPolygon(CenterOfCell(checkCell), polygon);
         }
-        public List<ArcSegmentConfidence> GetConfidenceArcSegmants(Vector2d<double> posistion)
+        public List<ArcSegmentConfidence> GetConfidenceArcSegmants(Vector2d<double> posistion, double distance)
         {
-            double angleIncriment = Math.PI / 15;
             var arcs = new List<ArcSegmentConfidence>();
             double confidenceSum = 0;
             int confidenceCount = 0;
             int arcIndex = 0;
-            for (double angle = 0; angle < 2 * Math.PI; angle += angleIncriment)
+            for (double angle = 0; angle < 2 * Math.PI; angle += AngleIncriment)
             {
-                var direction = new Vector2d<double>(new double[] { SensorFalloffDistance / 2, 0 }).Rotate(angle);
+                var direction = new Vector2d<double>(new double[] { distance, 0 }).Rotate(angle);
                 var confidence = GetRayConfidence(posistion, direction);
 
                 if (arcs.Count == 0 || arcs[arcIndex - 1].AngleInRadians >= Math.PI ||
                     (arcs[arcIndex - 1].Confidence < ArcSegmentConfidence.ConfidenceTreshold && confidence >= ArcSegmentConfidence.ConfidenceTreshold) ||
                     (arcs[arcIndex - 1].Confidence >= ArcSegmentConfidence.ConfidenceTreshold && confidence < ArcSegmentConfidence.ConfidenceTreshold))
                 {
-                    arcs.Add(new ArcSegmentConfidence(angleIncriment, posistion, direction.Rotate(-angleIncriment / 2), confidence));
+                    arcs.Add(new ArcSegmentConfidence(AngleIncriment, posistion, direction.Rotate(-AngleIncriment / 2), confidence));
                     confidenceSum = confidence;
                     confidenceCount = 1;
                     arcIndex++;
@@ -372,11 +371,39 @@ namespace Capstone
                 {
                     confidenceSum += confidence;
                     confidenceCount++;
-                    arcs[arcIndex - 1].AngleInRadians += angleIncriment;
+                    arcs[arcIndex - 1].AngleInRadians += AngleIncriment;
                     arcs[arcIndex - 1].Confidence = confidenceSum / confidenceCount;
                 }
             }
             return arcs;
+        }
+        public double GetLowestConfidneceInArcSegmant(ArcSegment arc)
+        {
+            double lowest = 1;
+            for (double angle = 0; angle - AngleIncriment < arc.AngleInRadians; angle += AngleIncriment)
+            {
+                var direction = arc.RaySegmant.Rotate(angle);
+                var confidence = Math.Abs(GetRayConfidence(arc.Position, direction));
+                if (confidence < lowest)
+                {
+                    lowest = confidence;
+                }
+            }
+            return lowest;
+        }
+        public double GetHighestObstacleConfidenceInArcSegmant(ArcSegment arc)
+        {
+            double HighestObstacleConfidence = -1;
+            for (double angle = 0; angle <= arc.AngleInRadians; angle += AngleIncriment)
+            {
+                var direction = arc.RaySegmant.Rotate(angle);
+                var confidence = GetRayObstacle(arc.Position, direction);
+                if (confidence > HighestObstacleConfidence)
+                {
+                    HighestObstacleConfidence = confidence;
+                }
+            }
+            return HighestObstacleConfidence;
         }
         private double GetRayConfidence(Vector2d<double> posistion, Vector2d<double> direction)
         {
@@ -397,6 +424,22 @@ namespace Capstone
             double result = Math.Max(confidenceSum / cells.Count, highest * 0.75);
             return Double.IsNaN(result) ? 0 : result;
         }
+        private double GetRayObstacle(Vector2d<double> posistion, Vector2d<double> direction)
+        {
+            var cells = CellsWithinDistanceOfLineSegmant(posistion, posistion + direction, CMPerPixel * 2, false);
+            double highest = -1;
+            foreach (var cell in cells)
+            {
+                var obstacleConfidence = GetPixelValue(cell);
+                if (obstacleConfidence > highest)
+                    highest = obstacleConfidence;
+            }
+            if (cells.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("There are no cells in that ray");
+            }
+            return highest;
+        }
         public bool CellIsWithinGrid(SurfaceCoordinate cell)
         {
             return cell.HorizontalCoordinate > 0 && cell.VerticalCoorindate > 0 && cell.HorizontalCoordinate < Width && cell.VerticalCoorindate < Width;
@@ -409,6 +452,7 @@ namespace Capstone
         protected double scale;
         protected double verticalOffset;
         protected double horizontalOffset;
+
         private void UpdateDisplayColors()
         {
             for (int i = 0; i < SurfaceUpdateQueue.Count; i++)

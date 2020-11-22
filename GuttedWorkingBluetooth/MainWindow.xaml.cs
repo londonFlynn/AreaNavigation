@@ -122,14 +122,15 @@ namespace Capstone
         {
             if (e.ClickCount == 2)
             {
-                DisplayPath(e);
+                ProgramManager.MoveRobotToPoint(GetClickedPoint(e));
+                //DisplayPath(e);
             }
         }
         private async void DisplayPath(MouseButtonEventArgs e)
         {
             StopDisplayingPaths();
             var point = GetClickedPoint(e);
-            //Debug.WriteLine(point);
+            Debug.WriteLine($"Finding path to {point}");
             var path = await ProgramManager.PathFromRobotToPoint(point);
             //Debug.WriteLine(point);
             if (path is null)
@@ -167,7 +168,7 @@ namespace Capstone
         private bool LeftIsPressed { get; set; }
         private bool RightIsPressed { get; set; }
         private bool F1IsPressed { get; set; }
-        private void UpdateMovmentState()
+        private void UpdateMovementState()
         {
             MovementCommandState state = MovementCommandState.NEUTRAL;
             if (UpIsPressed ^ DownIsPressed)
@@ -179,11 +180,16 @@ namespace Capstone
                 state = LeftIsPressed ? MovementCommandState.LEFT : MovementCommandState.RIGHT;
 
             }
+            Debug.WriteLine($"Set movement state to {state}");
             this.ProgramManager.Robot.MovementCommandState = state;
         }
         void CoreWindow_KeyDown(object sender, KeyEventArgs e)
         {
             bool F1wasPressed = F1IsPressed;
+            bool UpWasPressed = UpIsPressed;
+            bool DownWasPressed = DownIsPressed;
+            bool LeftWasPressed = LeftIsPressed;
+            bool RightWasPressed = RightIsPressed;
             switch (e.Key)
             {
                 case Key.Left:
@@ -204,11 +210,18 @@ namespace Capstone
             }
             if (!F1wasPressed && F1IsPressed)
                 ShowArcConfidenceSegments();
-            UpdateMovmentState();
+            if (UpWasPressed != UpIsPressed || DownWasPressed != DownIsPressed || LeftWasPressed != LeftIsPressed || RightWasPressed != RightIsPressed)
+            {
+                UpdateMovementState();
+            }
         }
         void CoreWindow_KeyUp(object sender, KeyEventArgs e)
         {
             bool F1WasPressed = F1IsPressed;
+            bool UpWasPressed = UpIsPressed;
+            bool DownWasPressed = DownIsPressed;
+            bool LeftWasPressed = LeftIsPressed;
+            bool RightWasPressed = RightIsPressed;
             switch (e.Key)
             {
                 case Key.Left:
@@ -229,9 +242,12 @@ namespace Capstone
             }
             if (F1WasPressed && !F1IsPressed)
             {
-                HideArcConfidenceSegments();
+                HideArcSegments();
             }
-            UpdateMovmentState();
+            if (UpWasPressed != UpIsPressed || DownWasPressed != DownIsPressed || LeftWasPressed != LeftIsPressed || RightWasPressed != RightIsPressed)
+            {
+                UpdateMovementState();
+            }
         }
         private void ShowArcConfidenceSegments()
         {
@@ -239,7 +255,7 @@ namespace Capstone
             //HideArcConfidenceSegments();
             if (!(ProgramManager.Robot.USSensor.GetCurrentReading() is null))
             {
-                var arcs = ProgramManager.ContructedMap.ObstacleSurface.GetConfidenceArcSegmants((ProgramManager.Robot.USSensor.GetCurrentReading() as RangeReading).SensorPosition);
+                var arcs = ProgramManager.ContructedMap.ObstacleSurface.GetConfidenceArcSegmants((ProgramManager.Robot.USSensor.GetCurrentReading() as RangeReading).SensorPosition, ProgramManager.Robot.USSensor.SensorFalloffDistance / 2);
                 //Debug.WriteLine($"Recived {arcs.Count} arc segmants");
                 foreach (var arc in arcs)
                 {
@@ -248,12 +264,24 @@ namespace Capstone
                 }
             }
         }
-        private void HideArcConfidenceSegments()
+        public void HideArcSegments()
         {
             //Debug.WriteLine("Hiding arc segmants");
             for (int i = 0; i < DisplayedItems.Count; i++)
             {
-                if (DisplayedItems[i] is ArcSegmentConfidence)
+                if (DisplayedItems[i] is ArcSegment)
+                {
+                    RemoveDisplayedItem(DisplayedItems[i]);
+                    i--;
+                }
+            }
+        }
+        public void HideMoveToDestinationPath()
+        {
+            //Debug.WriteLine("Hiding arc segmants");
+            for (int i = 0; i < DisplayedItems.Count; i++)
+            {
+                if (DisplayedItems[i] is MoveToDestinationController)
                 {
                     RemoveDisplayedItem(DisplayedItems[i]);
                     i--;

@@ -38,8 +38,9 @@ namespace Capstone
             if (RangeReadings.Count > 0)
             {
                 int index = Random.Next(RangeReadings.Count);
-                ObstacleSurface.MatchToRangeReading(RangeReadings[index], 0.125, false);
-
+                var reading = RangeReadings[index];
+                ObstacleSurface.MatchToRangeReading(reading, 1 / (7 + (reading.TimesSampled * reading.TimesSampled)), false);
+                reading.TimesSampled++;
             }
         }
         private void RandomlyResamplePastPosition()
@@ -55,6 +56,7 @@ namespace Capstone
         {
             this.PosOccupied.Add(mem);
             ObstacleSurface.MatchToAreaEmptyReading(mem, 1);
+            mem.TimesSampled++;
             this.NotifyDisplayChanged();
         }
         public void ReciveSensorReading(Sensor sensor)
@@ -66,7 +68,8 @@ namespace Capstone
                 //reading.SetScale(scale, horizontalOffset, verticalOffset);
                 //reading.StartDisplay();
                 //RangeReadings.Add(reading);
-                ObstacleSurface.MatchToRangeReading(reading, 0.5);
+                ObstacleSurface.MatchToRangeReading(reading, 0.25);
+                reading.TimesSampled++;
                 this.NotifyDisplayChanged();
             }
         }

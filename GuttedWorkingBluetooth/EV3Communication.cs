@@ -71,11 +71,11 @@ namespace Capstone
                     rightPower = -power;
                     break;
             }
-            //await brick.DirectCommand.TurnMotorAtPowerForTimeAsync(leftDrive, (int)(leftPower * 100), 100, false);
-            //await brick.DirectCommand.TurnMotorAtPowerForTimeAsync(rightDrive, (int)(rightPower * 100), 100, false);
-            brick.BatchCommand.TurnMotorAtPowerForTime(leftDrive, (int)(leftPower * 100), 100, false);
-            brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
-            await brick.BatchCommand.SendCommandAsync();
+            await brick.DirectCommand.TurnMotorAtPowerAsync(leftDrive, (int)(leftPower * 100));
+            await brick.DirectCommand.TurnMotorAtPowerAsync(rightDrive, (int)(rightPower * 100));
+            //brick.BatchCommand.TurnMotorAtPowerForTime(leftDrive, (int)(leftPower * 100), 100, false);
+            //brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
+            //await brick.BatchCommand.SendCommandAsync();
         }
         public void OnBrickChanged(object sender, BrickChangedEventArgs e)
         {
@@ -148,7 +148,7 @@ namespace Capstone
                     new InfraredRangeReading(
                         InfraredDataToCM(port.RawValue),
                         Robot.IRSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, Robot.IRSensor.SensorFalloffDistance));
         }
         private double InfraredDataToCM(double data)
         {
@@ -168,7 +168,7 @@ namespace Capstone
                     new UltrasonicRangeReading(
                         (port.RawValue + 0d) / 10,
                         Robot.USSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians));
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, Robot.USSensor.SensorFalloffDistance));
         }
         public override void StartGettingSensorReadings(Sensor sensor)
         {

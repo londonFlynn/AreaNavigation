@@ -12,10 +12,23 @@ namespace Capstone
     {
         //represents the position of the axis of rotation
         public Vector2d<double> Position { get; protected set; }
-        public double Orientation { get; protected set; }
+        private double _angle;
+        public double Orientation
+        {
+            get { return _angle; }
+            protected set
+            {
+                var angle = value;
+                while (angle < 0)
+                {
+                    angle += 2 * Math.PI;
+                }
+                _angle = angle % (2 * Math.PI);
+
+            }
+
+        }
         public RoboticCommunication RoboticCommunication { get; protected set; }
-        public double CurrentSpeed { get; protected set; }
-        public double CurrentRotationalSpeed { get; protected set; }
         //represents the edges of the robot relative to its axis of rotation
         protected Vector2d<double>[] Shape;
         //protected Sensor[] Sensors;
@@ -58,7 +71,29 @@ namespace Capstone
             }
             return result;
         }
-
+        public ArcSegment GetArcSegmantToFitRobotInDirection(double anlgeInRadians)
+        {
+            var left = LeftMostPoint().Rotate(anlgeInRadians).Unit() * this.MaxiumDistanceFromCenter;
+            var right = RightMostPoint().Rotate(anlgeInRadians).Unit() * this.MaxiumDistanceFromCenter;
+            ArcSegment result;
+            if (left.Angle() > right.Angle())
+            {
+                var angleBetween = Math.Abs(2 * Math.PI - Math.Abs(left.Angle() - right.Angle()));
+                result = new ArcSegment(angleBetween, this.Position, left);
+            }
+            else
+            {
+                var angleBetween = Math.Abs(right.Angle() - left.Angle());
+                result = new ArcSegment(angleBetween, this.Position, left);
+            }
+            return result;
+        }
+        public double RequiredClearWidth()
+        {
+            var left = LeftMostPoint();
+            var Right = RightMostPoint();
+            return (left - Right).Magnitude();
+        }
         public void ReciveSensorReading(Sensor sensor)
         {
             if (sensor is GyroscopeSensor)
@@ -68,7 +103,6 @@ namespace Capstone
             if (sensor == this.RightMotor)
                 reciveRightMotorReading(sensor as RotationSensor);
         }
-
         private void reciveRightMotorReading(RotationSensor rotationSensor)
         {
             if (!(this.Gyro.GetCurrentReading() is null))
@@ -80,11 +114,10 @@ namespace Capstone
                 var sin = Math.Sin(angle);
                 moveVector = new Vector2d<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
                 this.Position = this.Position + moveVector;
-                this.Orientation = angle;
+                //this.Orientation = angle;
                 this.UpdatePosition();
             }
         }
-
         private void reciveLeftMotorReading(RotationSensor rotationSensor)
         {
             if (!(this.Gyro.GetCurrentReading() is null))
@@ -97,7 +130,7 @@ namespace Capstone
                 var sin = Math.Sin(angle);
                 moveVector = new Vector2d<double>(new double[] { (moveVector[0] * cos) - (moveVector[1] * sin), (moveVector[0] * sin) + (moveVector[1] * cos), 0, 0 });
                 this.Position = this.Position + moveVector;
-                this.Orientation = angle;
+                //this.Orientation = angle;
                 this.UpdatePosition();
             }
         }
@@ -114,9 +147,9 @@ namespace Capstone
                 return max;
             }
         }
-
         private void ReciveGyroReading(GyroscopeSensor sensor)
         {
+
             this.Orientation = ((GyroscopeReading)this.Gyro.GetCurrentReading()).Radians;
             this.UpdatePosition();
         }
@@ -127,11 +160,12 @@ namespace Capstone
             this.UpdateDisplay();
             if (startPositionCheck)
             {
-                if (DateTime.Now - LastPositionReadingTime >= TimeSpan.FromMilliseconds(100))
-                    foreach (var subscriber in subscribesToRobotPostionChange)
+                if (DateTime.Now - LastPositionReadingTime >= TimeSpan.FromMilliseconds(1))
+                    for (int i = 0; i < subscribesToRobotPostionChange.Count; i++)
                     {
+                        var subscriber = subscribesToRobotPostionChange[i];
                         LastPositionReadingTime = DateTime.Now;
-                        subscriber.ReciveRobotPositionMemory(new PositionOccupiedByRobotMemory(this.FullRobotPosition()));
+                        subscriber.ReciveRobotPositionMemory(new PositionOccupiedByRobotMemory(this.FullRobotPosition(), this.Orientation, this.Position));
                     }
             }
             else
@@ -150,13 +184,41 @@ namespace Capstone
         {
             subscribesToRobotPostionChange.Remove(subscribes);
         }
-
+        private Vector2d<double> LeftMostPoint()
+        {
+            Vector2d<double> left = null;
+            foreach (var point in this.Shape)
+            {
+                if (left is null || point.x > left.x || (point.x == left.x && point.y > left.y))
+                {
+                    left = point;
+                }
+            }
+            return left;
+        }
+        private Vector2d<double> RightMostPoint()
+        {
+            Vector2d<double> right = null;
+            foreach (var point in this.Shape)
+            {
+                if (right is null || point.x < right.x || (point.x == right.x && point.y > right.y))
+                {
+                    right = point;
+                }
+            }
+            return right;
+        }
 
 
 
 
 
         private Polygon DisplayedRobot;
+        private Canvas panel;
+        private double scale;
+        private double verticalOffset;
+        private double horizontalOffset;
+
         public virtual void StartDisplay()
         {
             DisplayedRobot = new Polygon();
@@ -176,37 +238,6 @@ namespace Capstone
             }
             DisplayedRobot.Points = points;
         }
-        //public void BringToFront()
-        //{
-        //    try
-        //    {
-        //        var pParent = panel;
-        //        var pToMove = DisplayedRobot;
-        //        int currentIndex = Canvas.GetZIndex(pToMove);
-        //        int zIndex = 0;
-        //        int maxZ = 0;
-        //        UserControl child;
-        //        for (int i = 0; i < pParent.Children.Count; i++)
-        //        {
-        //            if (pParent.Children[i] is UserControl &&
-        //                pParent.Children[i] != pToMove)
-        //            {
-        //                child = pParent.Children[i] as UserControl;
-        //                zIndex = Canvas.GetZIndex(child);
-        //                maxZ = Math.Max(maxZ, zIndex);
-        //                if (zIndex > currentIndex)
-        //                {
-        //                    Canvas.SetZIndex(child, zIndex - 1);
-        //                }
-        //            }
-        //        }
-        //        Canvas.SetZIndex(pToMove, maxZ);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //    }
-        //}
-
         public double TopMostPosition()
         {
             double top = double.MaxValue;
@@ -247,18 +278,14 @@ namespace Capstone
             }
             return bottom;
         }
-
-
         public double MaxHeight()
         {
             return BottomMostPosition() - TopMostPosition();
         }
-
         public double MaxWidth()
         {
             return RightMostPosition() - LeftMostPosition();
         }
-
         public void NotifyDisplayChanged()
         {
             foreach (var listener in listeners)
@@ -266,7 +293,6 @@ namespace Capstone
                 listener.HearDisplayChanged();
             }
         }
-
         private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
         public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
         {
@@ -276,16 +302,10 @@ namespace Capstone
         {
             listeners.Remove(listener);
         }
-
-        private System.Windows.Controls.Canvas panel;
-        private double scale;
-        private double verticalOffset;
-        private double horizontalOffset;
         public void SetPanel(System.Windows.Controls.Canvas panel)
         {
             this.panel = panel;
         }
-
         public void SetScale(double scale, double horizontalOffset, double verticalOffset)
         {
             this.scale = scale;

@@ -2,6 +2,6 @@
 {
     public class UltrasonicSensor : RangeSensor
     {
-        public UltrasonicSensor(Vector2d<double> relPos) : base(relPos) { }
+        public UltrasonicSensor(Vector2d<double> relPos, double sensorFalloff) : base(relPos, sensorFalloff) { }
     }
 }

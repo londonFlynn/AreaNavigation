@@ -60,6 +60,11 @@
     <Compile Include="AccelerometerSensor.cs" />
     <Compile Include="ArcSegment.cs" />
     <Compile Include="ArcSegmentConfidence.cs" />
+    <Compile Include="MoveDistanceController.cs" />
+    <Compile Include="MovementControl.cs" />
+    <Compile Include="MoveToDestinationController.cs" />
+    <Compile Include="MoveDirectlyToPositionController.cs" />
+    <Compile Include="MoveToExploreArcController.cs" />
     <Compile Include="NetworkGenerator.cs" />
     <Compile Include="PathTrimer.cs" />
     <Compile Include="PositionOccupiedByRobotMemory.cs" />
@@ -93,6 +98,7 @@
     <Compile Include="SensorReading.cs" />
     <Compile Include="ISubscribesToRobotPostionChange.cs" />
     <Compile Include="SurfaceCoordinate.cs" />
+    <Compile Include="MoveToAngleController.cs" />
     <Compile Include="UltrasonicRangeReading.cs" />
     <Compile Include="UltrasonicSensor.cs" />
     <Compile Include="Vector2d.cs" />
