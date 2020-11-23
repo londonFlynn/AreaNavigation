@@ -4,7 +4,7 @@ namespace Capstone
 {
     public class ProgramManager
     {
-        public ContructedMap ContructedMap;
+        public ObstacleSurfaceUpdater ContructedMap;
         public Robot Robot;
         protected MainWindow Page;
         private MovementControl ActiveControl;
@@ -12,11 +12,7 @@ namespace Capstone
         {
             this.Page = page;
             this.Robot = new EV3Robot();
-            this.ContructedMap = new ContructedMap(Robot);
-            Page.AddDisplayItem(Robot);
-            Page.AddDisplayItem(ContructedMap);
-            //var arc = new ArcSegment(System.Math.PI / 2, new Vector2d<double>(new double[] { 0, 0 }), new Vector2d<double>(new double[] { 30, 0 }));
-            //page.AddDisplayItem(arc);
+            this.ContructedMap = new ObstacleSurfaceUpdater(Robot);
         }
         public async Task<NetworkPath> PathFromRobotToPoint(Vector2d<double> point)
         {
@@ -30,7 +26,6 @@ namespace Capstone
         {
             var move = new MoveToDestinationController(this.Robot, this.ContructedMap.ObstacleSurface, point);
             move.CallOnMovementFinished += MovedToPoint;
-            Page.AddDisplayItem(move);
             move.Execute();
         }
         private void MoveToExploreArcTest(Vector2d<double> point)
@@ -45,7 +40,6 @@ namespace Capstone
             var move = new MoveToExploreArcController(this.Robot, this.ContructedMap.ObstacleSurface, arc);
             move.CallOnMovementFinished += MovedToPoint;
             ActiveControl = move;
-            Page.AddDisplayItem(arc);
             move.Execute();
         }
         private void MoveToAngleTest(Vector2d<double> point)
@@ -64,7 +58,6 @@ namespace Capstone
         {
             var move = new MoveDirectlyToPositionController(this.Robot, this.ContructedMap.ObstacleSurface, point);
             move.CallOnMovementFinished += MovedToPoint;
-            Page.AddDisplayItem(move.Displayed);
             move.Execute();
         }
 

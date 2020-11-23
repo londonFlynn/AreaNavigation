@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Capstone.Display;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace Capstone
 {
-    public class ObstacleSurface : IDisplayable
+    public class ObstacleSurface : IDisplayablePositionedItem
     {
         public double CMPerPixel { get; private set; }
         private double[][] PixelMapping { get; set; }
@@ -15,6 +14,7 @@ namespace Capstone
         public const double ReadingRadius = 6.5;
         public const double ReadingNegativeRadius = 6.5;
         private const double AngleIncriment = Math.PI / 15;
+        private ObstacleSurfaceDisplayer Displayer;
 
         public ObstacleSurface(double cmPerPixel, int resolutionWidth, int resolutionHeight)
         {
@@ -39,7 +39,6 @@ namespace Capstone
                 foreach (var cell in increase)
                 {
                     AdjustRangeReadingObstacleValueForCell(cell, endpoint, startPoint, amount, reading.SensorFalloffDistance);
-                    SurfaceUpdateQueue.Add(cell);
                 }
             }
             else
@@ -51,10 +50,7 @@ namespace Capstone
             foreach (var cell in decrease)
             {
                 AdjustRangeReadingNoObstacleValueForCell(cell, endpoint, startPoint, amount, reading.SensorFalloffDistance);
-                SurfaceUpdateQueue.Add(cell);
             }
-            if (update)
-                UpdateDisplayColors();
         }
         private void AdjustRangeReadingObstacleValueForCell(SurfaceCoordinate cell, Vector2d<double> readingPosition, Vector2d<double> SensorPostion, double scaleModifer, double sensorFalloffDistance)
         {
@@ -129,10 +125,7 @@ namespace Capstone
                 var CurrentValue = GetPixelValue(cell);
                 var ChangedValue = Math.Max(-1, CurrentValue - (amount));
                 SetPixelValue(cell, ChangedValue);
-                SurfaceUpdateQueue.Add(cell);
             }
-            if (update)
-                UpdateDisplayColors();
         }
         public List<SurfaceCoordinate> CellsWithinRadiusOfPoint(Vector2d<double> point, double radius, bool ensureWithinGrid = true)
         {
@@ -219,9 +212,6 @@ namespace Capstone
                 }
             }
             this.PixelMapping = map;
-            this.StopDisplaying();
-            this.StartDisplay();
-            this.NotifyDisplayChanged();
             return new SurfaceCoordinate(coordinate.HorizontalCoordinate + halfWidthDifference, coordinate.VerticalCoorindate + halfHeightDifference);
         }
         private double DistanceBetweenGridCellAndPoint(SurfaceCoordinate cell, Vector2d<double> point)
@@ -444,139 +434,37 @@ namespace Capstone
         {
             return cell.HorizontalCoordinate > 0 && cell.VerticalCoorindate > 0 && cell.HorizontalCoordinate < Width && cell.VerticalCoorindate < Width;
         }
+        public PositionedItemDisplayer GetItemDisplayer()
+        {
+            if (Displayer is null)
+            {
+                Displayer = new ObstacleSurfaceDisplayer(this);
+            }
+            return Displayer;
+        }
 
-        //Display functionality
-        private List<SurfaceCoordinate> SurfaceUpdateQueue = new List<SurfaceCoordinate>();
-        private System.Windows.Shapes.Rectangle[][] PixelDisplay;
-        protected Canvas panel;
-        protected double scale;
-        protected double verticalOffset;
-        protected double horizontalOffset;
+        public void OnDisplayableValueChanged()
+        {
+            Displayer.PosistionedItemValueChanged();
+        }
+        public double LowestX()
+        {
+            return (-PixelMapping.Length / 2) * CMPerPixel;
+        }
 
-        private void UpdateDisplayColors()
+        public double HighestX()
         {
-            for (int i = 0; i < SurfaceUpdateQueue.Count; i++)
-            {
-                //try
-                //{
-                if (!(SurfaceUpdateQueue[i] is null))
-                    SetDisplayColor(SurfaceUpdateQueue[i].HorizontalCoordinate, SurfaceUpdateQueue[i].VerticalCoorindate);
-                //}
-                //catch (System.NullReferenceException e) { }
-            }
-            SurfaceUpdateQueue = new List<SurfaceCoordinate>();
+            return (PixelMapping.Length / 2) * CMPerPixel;
         }
-        public virtual void StartDisplay()
-        {
-            PixelDisplay = new System.Windows.Shapes.Rectangle[this.PixelMapping.Length][];
-            for (int i = 0; i < PixelDisplay.Length; i++)
-            {
-                PixelDisplay[i] = new System.Windows.Shapes.Rectangle[this.PixelMapping[0].Length];
-                for (int j = 0; j < PixelDisplay[i].Length; j++)
-                {
-                    PixelDisplay[i][j] = new System.Windows.Shapes.Rectangle();
-                    Canvas.SetZIndex(PixelDisplay[i][j], int.MinValue);
-                    panel.Children.Add(PixelDisplay[i][j]);
 
-                }
-            }
-            UpdateDisplay();
-        }
-        public virtual void UpdateDisplay()
+        public double LowestY()
         {
-            if (!(PixelDisplay is null) && PixelDisplay.Length > 0 && !(PixelDisplay[0] is null) && PixelDisplay[0].Length > 0 && !(PixelDisplay[0][0] is null))
-            {
-                for (int i = 0; i < PixelDisplay.Length; i++)
-                {
-                    for (int j = 0; j < PixelDisplay[i].Length; j++)
-                    {
-                        SetDisplaySize(i, j);
-                        SetDisplayPosition(i, j);
-                        SetDisplayColor(i, j);
-                    }
-                }
-            }
+            return (-PixelMapping[0].Length / 2) * CMPerPixel;
         }
-        private void SetDisplaySize(int x, int y)
+
+        public double HighestY()
         {
-            PixelDisplay[x][y].Width = CMPerPixel * scale;
-            PixelDisplay[x][y].Height = CMPerPixel * scale;
-        }
-        private void SetDisplayPosition(int x, int y)
-        {
-            Canvas.SetLeft(PixelDisplay[x][y], x * CMPerPixel * scale);
-            Canvas.SetTop(PixelDisplay[x][y], y * CMPerPixel * scale);
-        }
-        private void SetDisplayColor(int x, int y)
-        {
-            var coord = new SurfaceCoordinate(x, y);
-            PixelDisplay[x][y].Fill = new SolidColorBrush(GetPixelValue(coord) >= 0 ?
-                Color.FromArgb(255, (byte)(125 + Math.Floor(130 * GetPixelValue(coord))), 125, 125) :
-                Color.FromArgb((byte)(255), (byte)(125 * (1 + GetPixelValue(coord))), (byte)(125 * (1 + GetPixelValue(coord))), (byte)(125 * (1 + GetPixelValue(coord)))));
-        }
-        public void SetPanel(System.Windows.Controls.Canvas panel)
-        {
-            this.panel = panel;
-        }
-        public void SetScale(double scale, double horizontalOffset, double verticalOffset)
-        {
-            this.scale = scale;
-            this.horizontalOffset = horizontalOffset;
-            this.verticalOffset = verticalOffset;
-        }
-        public virtual double LeftMostPosition()
-        {
-            return CellBoundingRange(new SurfaceCoordinate(0, 0))[0].x;
-        }
-        public virtual double RightMostPosition()
-        {
-            return CellBoundingRange(new SurfaceCoordinate(PixelMapping.Length - 1, 0))[1].x;
-        }
-        public virtual double TopMostPosition()
-        {
-            return CellBoundingRange(new SurfaceCoordinate(0, 0))[0].y;
-        }
-        public virtual double BottomMostPosition()
-        {
-            return CellBoundingRange(new SurfaceCoordinate(0, PixelMapping[0].Length - 1))[1].y;
-        }
-        public double MaxHeight()
-        {
-            return BottomMostPosition() - TopMostPosition();
-        }
-        public double MaxWidth()
-        {
-            return RightMostPosition() - LeftMostPosition();
-        }
-        public void NotifyDisplayChanged()
-        {
-            foreach (var listener in listeners)
-            {
-                listener.HearDisplayChanged();
-            }
-        }
-        private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
-        public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
-        {
-            listeners.Add(listener);
-        }
-        public void UnsubsricbeDisplayChanged(ListenToDispalyChanged listener)
-        {
-            listeners.Remove(listener);
-        }
-        public void UnsubsribeAll()
-        {
-            listeners = new List<ListenToDispalyChanged>();
-        }
-        public void StopDisplaying()
-        {
-            for (int i = 0; i < PixelDisplay.Length; i++)
-            {
-                for (int j = 0; j < PixelDisplay[i].Length; j++)
-                {
-                    panel.Children.Remove(PixelDisplay[i][j]);
-                }
-            }
+            return (PixelMapping[0].Length / 2) * CMPerPixel;
         }
 
     }

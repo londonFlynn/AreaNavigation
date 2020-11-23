@@ -1,14 +1,10 @@
-﻿using System;
+﻿using Capstone.Display;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace Capstone
 {
-    public abstract class Robot : ISensorReadingSubsriber, IDisplayable
+    public abstract class Robot : ISensorReadingSubsriber, IDisplayablePositionedItem
     {
         //represents the position of the axis of rotation
         public Vector2d<double> Position { get; protected set; }
@@ -28,6 +24,7 @@ namespace Capstone
             }
 
         }
+        private RobotDisplayer Displayer;
         public RoboticCommunication RoboticCommunication { get; protected set; }
         //represents the edges of the robot relative to its axis of rotation
         protected Vector2d<double>[] Shape;
@@ -157,7 +154,6 @@ namespace Capstone
         private bool startPositionCheck = false;
         protected virtual void UpdatePosition()
         {
-            this.UpdateDisplay();
             if (startPositionCheck)
             {
                 if (DateTime.Now - LastPositionReadingTime >= TimeSpan.FromMilliseconds(1))
@@ -172,8 +168,6 @@ namespace Capstone
             {
                 startPositionCheck = true;
             }
-            //Debug.WriteLine($"updating position: X={this.Position[0]}, Y={this.Position[1]}, Angle in Radians = {this.Orientation}");
-            this.NotifyDisplayChanged();
         }
         List<ISubscribesToRobotPostionChange> subscribesToRobotPostionChange = new List<ISubscribesToRobotPostionChange>();
         public void SubscribeToRobotPositionChange(ISubscribesToRobotPostionChange subscribes)
@@ -208,113 +202,62 @@ namespace Capstone
             }
             return right;
         }
-
-
-
-
-
-        private Polygon DisplayedRobot;
-        private Canvas panel;
-        private double scale;
-        private double verticalOffset;
-        private double horizontalOffset;
-
-        public virtual void StartDisplay()
+        public PositionedItemDisplayer GetItemDisplayer()
         {
-            DisplayedRobot = new Polygon();
-            DisplayedRobot.Fill = new SolidColorBrush(Color.FromArgb(200, 200, 200, 255));
-            UpdateDisplay();
-            panel.Children.Add(DisplayedRobot);
-
-            Debug.WriteLine("Starting to display robot");
-            Canvas.SetZIndex(DisplayedRobot, 1);
-        }
-        public virtual void UpdateDisplay()
-        {
-            var points = new PointCollection();
-            foreach (var point in this.FullRobotPosition())
+            if (Displayer is null)
             {
-                points.Add(new Point((point[0] - horizontalOffset) * scale, (point[1] - verticalOffset) * scale));
+                Displayer = new RobotDisplayer(this);
             }
-            DisplayedRobot.Points = points;
+            return Displayer;
         }
-        public double TopMostPosition()
+
+        public void OnDisplayableValueChanged()
         {
-            double top = double.MaxValue;
-            foreach (var point in this.FullRobotPosition())
+            Displayer.PosistionedItemValueChanged();
+        }
+
+        public double LowestX()
+        {
+            var value = double.MaxValue;
+            foreach (var pos in this.FullRobotPosition())
             {
-                if (point[1] < top)
-                    top = point[1];
+                if (pos.x < value)
+                    value = pos.x;
             }
-            return top;
+            return value;
         }
-        public double RightMostPosition()
+
+        public double HighestX()
         {
-            double right = double.MinValue;
-            foreach (var point in this.FullRobotPosition())
+            var value = double.MinValue;
+            foreach (var pos in this.FullRobotPosition())
             {
-                if (point[0] > right)
-                    right = point[0];
+                if (pos.x > value)
+                    value = pos.x;
             }
-            return right;
+            return value;
         }
-        public double LeftMostPosition()
+
+        public double LowestY()
         {
-            double left = double.MaxValue;
-            foreach (var point in this.FullRobotPosition())
+            var value = double.MaxValue;
+            foreach (var pos in this.FullRobotPosition())
             {
-                if (point[0] < left)
-                    left = point[0];
+                if (pos.y < value)
+                    value = pos.y;
             }
-            return left;
+            return value;
         }
-        public double BottomMostPosition()
+
+        public double HighestY()
         {
-            double bottom = double.MinValue;
-            foreach (var point in this.FullRobotPosition())
+            var value = double.MinValue;
+            foreach (var pos in this.FullRobotPosition())
             {
-                if (point[1] > bottom)
-                    bottom = point[1];
+                if (pos.y > value)
+                    value = pos.y;
             }
-            return bottom;
-        }
-        public double MaxHeight()
-        {
-            return BottomMostPosition() - TopMostPosition();
-        }
-        public double MaxWidth()
-        {
-            return RightMostPosition() - LeftMostPosition();
-        }
-        public void NotifyDisplayChanged()
-        {
-            foreach (var listener in listeners)
-            {
-                listener.HearDisplayChanged();
-            }
-        }
-        private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
-        public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
-        {
-            listeners.Add(listener);
-        }
-        public void UnsubsricbeDisplayChanged(ListenToDispalyChanged listener)
-        {
-            listeners.Remove(listener);
-        }
-        public void SetPanel(System.Windows.Controls.Canvas panel)
-        {
-            this.panel = panel;
-        }
-        public void SetScale(double scale, double horizontalOffset, double verticalOffset)
-        {
-            this.scale = scale;
-            this.horizontalOffset = horizontalOffset;
-            this.verticalOffset = verticalOffset;
-        }
-        public void StopDisplaying()
-        {
-            panel.Children.Remove(DisplayedRobot);
+            return value;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using Capstone.Display;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,13 +9,14 @@ namespace Capstone
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, ListenToDispalyChanged
+    public partial class MainWindow : Window
     {
         ProgramManager ProgramManager;
-        List<IDisplayable> DisplayedItems = new List<IDisplayable>();
+        PositionalDisplayItemManager DisplayItemManager;
         public MainWindow()
         {
             this.InitializeComponent();
+            this.DisplayItemManager = new PositionalDisplayItemManager(this.FindName("MapCanvas") as Canvas, this);
             this.ProgramManager = new ProgramManager(this);
             InputManager.Current.PreProcessInput += (sender, e) =>
             {
@@ -24,97 +25,10 @@ namespace Capstone
                       (MouseButtonEventArgs)e.StagingItem.Input);
             };
         }
-        private double recentScale = 1;
-        private double recentVOffset = 0;
-        private double recentHOffset = 0;
-        public void AddDisplayItem(IDisplayable item)
-        {
-            DisplayedItems.Add(item);
-            item.SubsricbeDisplayChanged(this);
-            item.SetPanel(this.FindName("MapCanvas") as Canvas);
-            item.SetScale(recentScale, recentHOffset, recentVOffset);
-            item.StartDisplay();
-            HearDisplayChanged();
-        }
-        public void RemoveDisplayedItem(IDisplayable item)
-        {
-            DisplayedItems.Remove(item);
-            item.UnsubsricbeDisplayChanged(this);
-            item.StopDisplaying();
-            HearDisplayChanged();
-        }
-        private double GenerateScale()
-        {
-            var windowWidth = this.Width;
-            var windowHeight = this.Height;
-            if (windowWidth == 0 || windowHeight == 0)
-            {
-                windowWidth = 1;
-                windowHeight = 1;
-            }
-            double leftMost = double.MaxValue;
-            double rightMost = double.MinValue;
-            double topMost = double.MaxValue;
-            double bottomMost = double.MinValue;
-            double maxWidth = 0;
-            double maxHeight = 0;
-            foreach (IDisplayable item in DisplayedItems)
-            {
-                var itemLeft = item.LeftMostPosition();
-                var itemRight = item.RightMostPosition();
-                var itemTop = item.TopMostPosition();
-                var itemBottom = item.BottomMostPosition();
-                leftMost = itemLeft < leftMost ? itemLeft : leftMost;
-                rightMost = itemRight > rightMost ? itemRight : rightMost;
-                topMost = itemTop < topMost ? itemTop : topMost;
-                bottomMost = itemBottom > bottomMost ? itemBottom : bottomMost;
-                maxWidth = rightMost - leftMost;
-                maxHeight = bottomMost - topMost;
-            }
-            var horizontalScale = windowWidth / maxWidth;
-            var verticalScale = windowHeight / maxHeight;
 
-            var scale = horizontalScale < verticalScale ? horizontalScale : verticalScale;
-            return scale;
-        }
-        private Vector2d<double> GenerateOffset()
-        {
-            double topMost = double.MaxValue;
-            double leftMost = double.MaxValue;
-            foreach (IDisplayable item in DisplayedItems)
-            {
-                if (item.TopMostPosition() < topMost)
-                    topMost = item.TopMostPosition();
-                if (item.LeftMostPosition() < leftMost)
-                    leftMost = item.LeftMostPosition();
-            }
-            return new Vector2d<double>(new double[] { leftMost, topMost, 0, 0 });
-        }
-        private void UpdateDisplay()
-        {
-            foreach (IDisplayable item in DisplayedItems)
-            {
-                item.SetScale(recentScale, recentHOffset, recentVOffset);
-                item.UpdateDisplay();
-            }
-        }
         private void CurrentWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            HearDisplayChanged();
-        }
-        public void HearDisplayChanged()
-        {
-            //if (!(this.ProgramManager is null) && !(this.ProgramManager.Robot is null))
-            //    this.ProgramManager.Robot.BringToFront();
-            var offset = GenerateOffset();
-            var scale = GenerateScale();
-            if (offset[0] != recentHOffset || offset[1] != recentVOffset || recentScale != scale)
-            {
-                this.recentScale = scale;
-                this.recentVOffset = offset[1];
-                this.recentHOffset = offset[0];
-                UpdateDisplay();
-            }
+            DisplayItemManager.DisplayItemDimensionsChanged();
         }
 
 
@@ -126,35 +40,6 @@ namespace Capstone
                 //DisplayPath(e);
             }
         }
-        private async void DisplayPath(MouseButtonEventArgs e)
-        {
-            StopDisplayingPaths();
-            var point = GetClickedPoint(e);
-            Debug.WriteLine($"Finding path to {point}");
-            var path = await ProgramManager.PathFromRobotToPoint(point);
-            //Debug.WriteLine(point);
-            if (path is null)
-            {
-                Debug.WriteLine("There is not a path to that point");
-            }
-            else
-            {
-                Debug.WriteLine("Displaying Path");
-                AddDisplayItem(path);
-            }
-        }
-        private void StopDisplayingPaths()
-        {
-            for (int i = 0; i < DisplayedItems.Count; i++)
-            {
-                if (DisplayedItems[i] is NetworkPath)
-                {
-                    RemoveDisplayedItem(DisplayedItems[i]);
-                    i--;
-                }
-            }
-        }
-
 
         private Vector2d<double> GetClickedPoint(MouseButtonEventArgs e)
         {
@@ -260,33 +145,25 @@ namespace Capstone
                 foreach (var arc in arcs)
                 {
 
-                    AddDisplayItem(arc);
+                    arc.GetItemDisplayer().StartDisplaying();
                 }
             }
         }
         public void HideArcSegments()
         {
-            //Debug.WriteLine("Hiding arc segmants");
-            for (int i = 0; i < DisplayedItems.Count; i++)
-            {
-                if (DisplayedItems[i] is ArcSegment)
-                {
-                    RemoveDisplayedItem(DisplayedItems[i]);
-                    i--;
-                }
-            }
+            DisplayItemManager.StopDisplayingItemsOfType<ArcConfidenceDisplayer>();
         }
         public void HideMoveToDestinationPath()
         {
             //Debug.WriteLine("Hiding arc segmants");
-            for (int i = 0; i < DisplayedItems.Count; i++)
-            {
-                if (DisplayedItems[i] is MoveToDestinationController)
-                {
-                    RemoveDisplayedItem(DisplayedItems[i]);
-                    i--;
-                }
-            }
+            //for (int i = 0; i < DisplayedItems.Count; i++)
+            //{
+            //    if (DisplayedItems[i] is MoveToDestinationController)
+            //    {
+            //        RemoveDisplayedItem(DisplayedItems[i]);
+            //        i--;
+            //    }
+            //}
         }
 
     }

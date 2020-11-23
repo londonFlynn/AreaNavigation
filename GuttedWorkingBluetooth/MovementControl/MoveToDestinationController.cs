@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Capstone
 {
-    public class MoveToDestinationController : MovementControl, IDisplayable, ListenToDispalyChanged
+    public class MoveToDestinationController : MovementControl
     {
 
         private Vector2d<double> EndDestination;
@@ -15,18 +14,7 @@ namespace Capstone
             get { return _currentPath; }
             set
             {
-                LastPath = _currentPath;
-                if (!(LastPath is null))
-                {
-                    if (startedDisplaying)
-                        LastPath.StopDisplaying();
-                    LastPath.UnsubsricbeDisplayChanged(this);
-                }
                 _currentPath = value;
-                if (_currentPath != null)
-                {
-                    SetupPath(_currentPath);
-                }
             }
         }
         public MoveToDestinationController(Robot robot, ObstacleSurface surface, Vector2d<double> destination) : base(robot, surface)
@@ -100,143 +88,6 @@ namespace Capstone
             if (CompletedSuccessfully)
                 System.Diagnostics.Debug.WriteLine($"Move to destination {this.EndDestination} completed successfully");
             base.Abort();
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-        //Display stuffs
-        private bool startedDisplaying;
-        protected System.Windows.Controls.Canvas panel;
-        protected double scale;
-        protected double verticalOffset;
-        protected double horizontalOffset;
-        public void StartDisplay()
-        {
-            startedDisplaying = true;
-            if (!(CurrentPath is null))
-            {
-                CurrentPath.StartDisplay();
-            }
-        }
-        public void UpdateDisplay()
-        {
-            if (!(CurrentPath is null))
-            {
-                CurrentPath.UpdateDisplay();
-            }
-        }
-        public virtual void SetPanel(System.Windows.Controls.Canvas panel)
-        {
-            this.panel = panel;
-            if (!(CurrentPath is null))
-            {
-                CurrentPath.SetPanel(panel);
-            }
-        }
-        public virtual void SetScale(double scale, double horizontalOffset, double verticalOffset)
-        {
-            this.scale = scale;
-            this.horizontalOffset = horizontalOffset;
-            this.verticalOffset = verticalOffset;
-            if (!(CurrentPath is null))
-            {
-                CurrentPath.SetScale(scale, horizontalOffset, verticalOffset);
-            }
-        }
-        public double MaxWidth()
-        {
-            if (!(CurrentPath is null))
-            {
-                return CurrentPath.MaxWidth();
-            }
-            return 0;
-        }
-        public double MaxHeight()
-        {
-            if (!(CurrentPath is null))
-            {
-                return CurrentPath.MaxHeight();
-            }
-            return 0;
-        }
-        public double LeftMostPosition()
-        {
-            if (!(CurrentPath is null))
-            {
-                return CurrentPath.LeftMostPosition();
-            }
-            return double.MaxValue;
-        }
-        public double RightMostPosition()
-        {
-            if (!(CurrentPath is null))
-            {
-                return CurrentPath.RightMostPosition();
-            }
-            return double.MinValue;
-        }
-        public double TopMostPosition()
-        {
-            if (!(CurrentPath is null))
-            {
-                return CurrentPath.TopMostPosition();
-            }
-            return double.MaxValue;
-        }
-        public double BottomMostPosition()
-        {
-            if (!(CurrentPath is null))
-            {
-                return CurrentPath.BottomMostPosition();
-            }
-            return double.MinValue;
-        }
-        public void NotifyDisplayChanged()
-        {
-            foreach (var listener in listeners)
-            {
-                listener.HearDisplayChanged();
-            }
-        }
-        public void StopDisplaying()
-        {
-            startedDisplaying = false;
-            if (!(CurrentPath is null))
-            {
-                CurrentPath.StopDisplaying();
-            }
-        }
-        private List<ListenToDispalyChanged> listeners = new List<ListenToDispalyChanged>();
-        public void SubsricbeDisplayChanged(ListenToDispalyChanged listener)
-        {
-            listeners.Add(listener);
-        }
-        public void UnsubsricbeDisplayChanged(ListenToDispalyChanged listener)
-        {
-            listeners.Remove(listener);
-        }
-        private void SetupPath(NetworkPath path)
-        {
-            path.SetPanel(panel);
-            path.SetScale(scale, horizontalOffset, verticalOffset);
-            path.SubsricbeDisplayChanged(this);
-            if (startedDisplaying)
-            {
-                path.StartDisplay();
-            }
-        }
-        public void HearDisplayChanged()
-        {
-            NotifyDisplayChanged();
         }
     }
 }
