@@ -7,7 +7,7 @@
     <ProjectGuid>{0B140421-4421-4673-972F-7FFB6268F0DC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Capstone</RootNamespace>
+    <RootNamespace>RoboticNavigation</RootNamespace>
     <AssemblyName>SampleApp %28WPF%29</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -39,6 +39,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -56,48 +57,64 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ArcSegment.cs" />
-    <Compile Include="ArcSegmentConfidence.cs" />
-    <Compile Include="MovementControl\MoveDistanceController.cs" />
-    <Compile Include="MovementControl\MovementControl.cs" />
-    <Compile Include="MovementControl\MoveToDestinationController.cs" />
-    <Compile Include="MovementControl\MoveDirectlyToPositionController.cs" />
-    <Compile Include="MovementControl\MoveToExploreArcController.cs" />
-    <Compile Include="Network\NetworkGenerator.cs" />
-    <Compile Include="Network\PathTrimer.cs" />
-    <Compile Include="Sensor\SensorReadings\PositionOccupiedByRobotMemory.cs" />
-    <Compile Include="ObstacleSurface\ContructedMap.cs" />
-    <Compile Include="Robot\EV3Communication.cs" />
-    <Compile Include="Robot\EV3Robot.cs" />
-    <Compile Include="Sensor\SensorReadings\GyroscopeReading.cs" />
-    <Compile Include="Sensor\GyroscopeSensor.cs" />
-    <Compile Include="IDisplayable.cs" />
-    <Compile Include="Sensor\SensorReadings\InfraredRangeReading.cs" />
-    <Compile Include="Sensor\InfraredSensor.cs" />
-    <Compile Include="Sensor\ISensorReadingSubsriber.cs" />
+    <Compile Include="ArcSegmants\ArcSegment.cs" />
+    <Compile Include="ArcSegmants\ArcSegmentConfidence.cs" />
+    <Compile Include="Display\ArcConfidenceDisplayer.cs" />
+    <Compile Include="Display\DisplayItemDimensions.cs" />
+    <Compile Include="Display\DisplayOffset.cs" />
+    <Compile Include="Display\IDisplayablePositionedItem.cs" />
+    <Compile Include="Display\ImageConversion.cs" />
+    <Compile Include="Display\NetworkPathDisplayer.cs" />
+    <Compile Include="Display\ObstacleSurfaceDisplayer.cs" />
+    <Compile Include="Display\PositionalDisplayItemManager.cs" />
+    <Compile Include="Display\PositionedItemDisplayer.cs" />
+    <Compile Include="Display\RobotDisplayer.cs" />
+    <Compile Include="ImageManipulators\Converters.cs" />
+    <Compile Include="ImageManipulators\ResolutionChanger.cs" />
+    <Compile Include="MovementControls\MoveDistanceController.cs" />
+    <Compile Include="MovementControls\MovementControl.cs" />
+    <Compile Include="MovementControls\MoveToDestinationController.cs" />
+    <Compile Include="MovementControls\MoveDirectlyToPositionController.cs" />
+    <Compile Include="MovementControls\MoveToExploreArcController.cs" />
+    <Compile Include="NavNetworks\NetworkGenerator.cs" />
+    <Compile Include="NavNetworks\PathTrimer.cs" />
+    <Compile Include="Sensors\SensorReadings\PositionOccupiedByRobotMemory.cs" />
+    <Compile Include="Surface\CompositeObstacleSurface.cs" />
+    <Compile Include="Surface\CompositeObstacleSurfaceFactory.cs" />
+    <Compile Include="Surface\ObstacleSurface.cs" />
+    <Compile Include="Surface\ObstacleSurfaceLoader.cs" />
+    <Compile Include="Surface\ObstacleSurfaceSaver.cs" />
+    <Compile Include="Surface\ObstacleSurfaceUpdater.cs" />
+    <Compile Include="Robots\EV3Communication.cs" />
+    <Compile Include="Robots\EV3Robot.cs" />
+    <Compile Include="Sensors\SensorReadings\GyroscopeReading.cs" />
+    <Compile Include="Sensors\GyroscopeSensor.cs" />
+    <Compile Include="Sensors\SensorReadings\InfraredRangeReading.cs" />
+    <Compile Include="Sensors\InfraredSensor.cs" />
+    <Compile Include="Sensors\ISensorReadingSubsriber.cs" />
+    <Compile Include="Surface\ImagedObstacleSurface.cs" />
+    <Compile Include="Surface\SurfaceImageGenerator.cs" />
     <Compile Include="VectorMath\LineTool.cs" />
-    <Compile Include="ListenToDispalyChanged.cs" />
-    <Compile Include="ObstacleSurface\Map.cs" />
-    <Compile Include="MovementControl\MovementCommandState.cs" />
-    <Compile Include="Network\NetworkNode.cs" />
-    <Compile Include="ObstacleSurface\ObstacleSurface.cs" />
-    <Compile Include="Network\Network.cs" />
-    <Compile Include="Network\NetworkPath.cs" />
+    <Compile Include="MovementControls\MovementCommandState.cs" />
+    <Compile Include="NavNetworks\NetworkNode.cs" />
+    <Compile Include="Surface\AdjustibleObstacleSurface.cs" />
+    <Compile Include="NavNetworks\Network.cs" />
+    <Compile Include="NavNetworks\NetworkPath.cs" />
     <Compile Include="ProgramManager.cs" />
-    <Compile Include="Sensor\SensorReadings\RangeReading.cs" />
-    <Compile Include="Sensor\RangeSensor.cs" />
-    <Compile Include="Robot\Robot.cs" />
-    <Compile Include="Robot\RoboticCommunication.cs" />
+    <Compile Include="Sensors\SensorReadings\RangeReading.cs" />
+    <Compile Include="Sensors\RangeSensor.cs" />
+    <Compile Include="Robots\Robot.cs" />
+    <Compile Include="Robots\RoboticCommunication.cs" />
     <Compile Include="VectorMath\Rotation.cs" />
-    <Compile Include="Sensor\RotationSensor.cs" />
-    <Compile Include="Sensor\SensorReadings\RotationSensorReading.cs" />
-    <Compile Include="Sensor\Sensor.cs" />
-    <Compile Include="Sensor\SensorReadings\SensorReading.cs" />
-    <Compile Include="Robot\ISubscribesToRobotPostionChange.cs" />
-    <Compile Include="SurfaceCoordinate.cs" />
-    <Compile Include="MovementControl\MoveToAngleController.cs" />
-    <Compile Include="Sensor\SensorReadings\UltrasonicRangeReading.cs" />
-    <Compile Include="Sensor\SensorReadings\UltrasonicSensor.cs" />
+    <Compile Include="Sensors\RotationSensor.cs" />
+    <Compile Include="Sensors\SensorReadings\RotationSensorReading.cs" />
+    <Compile Include="Sensors\Sensor.cs" />
+    <Compile Include="Sensors\SensorReadings\SensorReading.cs" />
+    <Compile Include="Robots\ISubscribesToRobotPostionChange.cs" />
+    <Compile Include="Surface\SurfaceCoordinate.cs" />
+    <Compile Include="MovementControls\MoveToAngleController.cs" />
+    <Compile Include="Sensors\SensorReadings\UltrasonicRangeReading.cs" />
+    <Compile Include="Sensors\UltrasonicSensor.cs" />
     <Compile Include="VectorMath\Vector2d.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -139,6 +156,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Robot.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Capstone
+namespace RoboticNavigation.VectorMath
 {
     public class Vector2d<T> where T : struct,
           IComparable,

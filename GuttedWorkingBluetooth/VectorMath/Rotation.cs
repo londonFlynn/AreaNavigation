@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Capstone
+namespace RoboticNavigation.VectorMath
 {
     public static class Rotation
     {

@@ -1,4 +1,4 @@
-﻿namespace Capstone.Display
+﻿namespace RoboticNavigation.Display
 {
     public class DisplayItemDimensions
     {

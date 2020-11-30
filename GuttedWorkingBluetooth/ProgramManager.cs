@@ -1,30 +1,40 @@
-﻿using System.Threading.Tasks;
+﻿using RoboticNavigation.MovementControls;
+using RoboticNavigation.Robots;
+using RoboticNavigation.Surface;
+using RoboticNavigation.VectorMath;
 
-namespace Capstone
+namespace RoboticNavigation
 {
     public class ProgramManager
     {
-        public ObstacleSurfaceUpdater ContructedMap;
+        public ObstacleSurfaceUpdater SurfaceUpdater;
+        public ObstacleSurface Surface;
         public Robot Robot;
-        protected MainWindow Page;
+        protected Viewbox Page;
         private MovementControl ActiveControl;
-        public ProgramManager(MainWindow page)
+        public ProgramManager(Viewbox page)
         {
             this.Page = page;
             this.Robot = new EV3Robot();
-            this.ContructedMap = new ObstacleSurfaceUpdater(Robot);
+            Robot.GetDisplayer().StartDisplaying();
+            this.Surface = new AdjustibleObstacleSurface(3, 100, 100);
+            this.SurfaceUpdater = new ObstacleSurfaceUpdater(Robot, Surface as AdjustibleObstacleSurface);
+            Surface.GetDisplayer().StartDisplaying();
         }
-        public async Task<NetworkPath> PathFromRobotToPoint(Vector2d<double> point)
+        public void SaveObstacleSurface()
         {
-            var generator = new NetworkGenerator(this.ContructedMap.ObstacleSurface, this.Robot.RequiredClearWidth() / 2);
-            var network = await Task.Factory.StartNew(() => generator.GeneratePathNetwork());
-            var path = network.GeneratePath(this.Robot.Position, point);
-            var trimer = new PathTrimer(path, this.ContructedMap.ObstacleSurface, this.Robot.RequiredClearWidth() / 2);
-            return trimer.Trim();
+            this.Surface.Save();
+        }
+        public void LoadObstacleSurface(string filepath)
+        {
+            System.Diagnostics.Debug.WriteLine(filepath);
+            var surface = ObstacleSurfaceLoader.Load(filepath);
+            //surface.GetDisplayer().StartDisplaying();
+            //surface.ChangeResolution(30).GetDisplayer().StartDisplaying();
         }
         public void MoveRobotToPoint(Vector2d<double> point)
         {
-            var move = new MoveToDestinationController(this.Robot, this.ContructedMap.ObstacleSurface, point);
+            var move = new MoveToDestinationController(this.Robot, this.Surface, point);
             move.CallOnMovementFinished += MovedToPoint;
             move.Execute();
         }
@@ -37,7 +47,7 @@ namespace Capstone
             }
             Page.HideMoveToDestinationPath();
             var arc = Robot.GetArcSegmantToFitRobotInDirection((point - Robot.Position).Angle());
-            var move = new MoveToExploreArcController(this.Robot, this.ContructedMap.ObstacleSurface, arc);
+            var move = new MoveToExploreArcController(this.Robot, this.Surface, arc);
             move.CallOnMovementFinished += MovedToPoint;
             ActiveControl = move;
             move.Execute();
@@ -50,13 +60,13 @@ namespace Capstone
         }
         private void MoveDistanceTest(Vector2d<double> point)
         {
-            var move = new MoveDistanceController(this.Robot, this.ContructedMap.ObstacleSurface, (point - Robot.Position).Magnitude());
+            var move = new MoveDistanceController(this.Robot, this.Surface, (point - Robot.Position).Magnitude());
             move.CallOnMovementFinished += MovedToPoint;
             move.Execute();
         }
         private void MoveDirectlyToPointTest(Vector2d<double> point)
         {
-            var move = new MoveDirectlyToPositionController(this.Robot, this.ContructedMap.ObstacleSurface, point);
+            var move = new MoveDirectlyToPositionController(this.Robot, this.Surface, point);
             move.CallOnMovementFinished += MovedToPoint;
             move.Execute();
         }

@@ -1,7 +1,8 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 
-namespace Capstone.Display
+namespace RoboticNavigation.Display
 {
     public abstract class PositionedItemDisplayer
     {
@@ -9,10 +10,12 @@ namespace Capstone.Display
         public double Scale { get { return PositionalDisplayItemManager.Current.Scale; } }
         public DisplayOffset Offset { get { return PositionalDisplayItemManager.Current.DisplayOffset; } }
         public Canvas Canvas { get { return PositionalDisplayItemManager.Current.PositionedItemsCanvas; } }
-        public UIElement RootElement { get; private set; }
+        public UIElement RootElement { get; protected set; }
         protected DisplayItemDimensions LastDimensions;
         public DimensionsChanged DimensionsChanged = delegate { };
         public bool IsDisplaying { get; private set; }
+        private int FrameRateTime = 100;
+        private DateTime LastChanged = DateTime.Now;
 
         public PositionedItemDisplayer(IDisplayablePositionedItem itemToBeDisplayed)
         {
@@ -31,11 +34,15 @@ namespace Capstone.Display
         }
         public virtual void PosistionedItemValueChanged()
         {
-            var dimensions = new DisplayItemDimensions(DisplayedItem);
-            if (dimensions != LastDimensions)
+            if (DateTime.Now - LastChanged > TimeSpan.FromMilliseconds(FrameRateTime))
             {
-                LastDimensions = dimensions;
-                DimensionsChanged.DynamicInvoke();
+                LastChanged = DateTime.Now;
+                var dimensions = new DisplayItemDimensions(DisplayedItem);
+                if (dimensions != LastDimensions)
+                {
+                    LastDimensions = dimensions;
+                    DimensionsChanged.DynamicInvoke();
+                }
             }
         }
         public double ItemWidth()

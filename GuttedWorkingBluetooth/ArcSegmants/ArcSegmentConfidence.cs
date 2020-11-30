@@ -1,6 +1,7 @@
-﻿using Capstone.Display;
+﻿using RoboticNavigation.Display;
+using RoboticNavigation.VectorMath;
 
-namespace Capstone
+namespace RoboticNavigation.ArcSegmants
 {
     public class ArcSegmentConfidence : ArcSegment, IDisplayablePositionedItem
     {
@@ -16,7 +17,7 @@ namespace Capstone
             return $"Confidence: {Confidence}\r\nAngle: {this.AngleInRadians}\r\nPositon{this.Position}\r\nDistance{this.RaySegmant}";
         }
 
-        public PositionedItemDisplayer GetItemDisplayer()
+        public PositionedItemDisplayer GetDisplayer()
         {
             if (Displayer is null)
             {
@@ -25,7 +26,7 @@ namespace Capstone
             return Displayer;
         }
 
-        public void OnDisplayableValueChanged()
+        public void DisplayableValueChanged()
         {
             Displayer.PosistionedItemValueChanged();
         }

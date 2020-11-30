@@ -1,4 +1,6 @@
-﻿namespace Capstone
+﻿using RoboticNavigation.VectorMath;
+
+namespace RoboticNavigation.ArcSegmants
 {
     public class ArcSegment
     {

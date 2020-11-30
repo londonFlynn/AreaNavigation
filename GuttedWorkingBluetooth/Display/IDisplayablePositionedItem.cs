@@ -1,9 +1,9 @@
-﻿namespace Capstone.Display
+﻿namespace RoboticNavigation.Display
 {
     public interface IDisplayablePositionedItem
     {
-        PositionedItemDisplayer GetItemDisplayer();
-        void OnDisplayableValueChanged();
+        PositionedItemDisplayer GetDisplayer();
+        void DisplayableValueChanged();
         double LowestX();
         double HighestX();
         double LowestY();

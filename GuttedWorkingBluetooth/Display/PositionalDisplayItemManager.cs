@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Controls;
 
-namespace Capstone.Display
+namespace RoboticNavigation.Display
 {
     public class PositionalDisplayItemManager
     {
@@ -9,21 +9,21 @@ namespace Capstone.Display
         public double Scale { get; private set; }
         public DisplayOffset DisplayOffset { get; private set; }
         public Canvas PositionedItemsCanvas { get; private set; }
-        public MainWindow MainWindow;
+        public System.Windows.Controls.Panel ContainingBox;
         private List<PositionedItemDisplayer> ItemDisplayers = new List<PositionedItemDisplayer>();
 
-        public PositionalDisplayItemManager(Canvas itemCanvas, MainWindow mainWindow)
+        public PositionalDisplayItemManager(Canvas itemCanvas, System.Windows.Controls.Panel containingBox)
         {
             this.PositionedItemsCanvas = itemCanvas;
-            this.MainWindow = mainWindow;
+            this.ContainingBox = containingBox;
             Scale = GenerateScale();
             DisplayOffset = GenerateOffset();
             Current = this;
         }
         private double GenerateScale()
         {
-            var windowWidth = MainWindow.Width;
-            var windowHeight = MainWindow.Height;
+            var windowWidth = ContainingBox.ActualWidth;
+            var windowHeight = ContainingBox.ActualHeight;
             if (windowWidth == 0 || windowHeight == 0)
             {
                 windowWidth = 1;
@@ -106,10 +106,14 @@ namespace Capstone.Display
         }
         private void UpdateAllItemsDisplayPosition()
         {
-            foreach (var item in ItemDisplayers)
+            this.PositionedItemsCanvas.Dispatcher.Invoke(() =>
             {
-                item.ElementOnScreenPositionChanged();
-            }
+                for (int i = 0; i < ItemDisplayers.Count; i++)
+                {
+                    var item = ItemDisplayers[i];
+                    item.ElementOnScreenPositionChanged();
+                }
+            });
         }
         public void StopDisplayingItemsOfType<T>()
         {
