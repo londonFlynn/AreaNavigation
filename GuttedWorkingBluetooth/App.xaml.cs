@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace Capstone
+namespace RoboticNavigation
 {
 	/// <summary>
 	/// Interaction logic for App.xaml

@@ -1,120 +1,53 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Win32;
+using RoboticNavigation.Display;
+using RoboticNavigation.MovementControls;
+using RoboticNavigation.Sensors.SensorReadings;
+using RoboticNavigation.VectorMath;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
-namespace Capstone
+namespace RoboticNavigation
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, ListenToDispalyChanged
+    public partial class Viewbox : Window
     {
         ProgramManager ProgramManager;
-        List<IDisplayable> DisplayedItems = new List<IDisplayable>();
-        public MainWindow()
+        PositionalDisplayItemManager DisplayItemManager;
+        private System.Collections.Generic.Dictionary<Key, bool> KeyPressed = new System.Collections.Generic.Dictionary<Key, bool>();
+        public Viewbox()
         {
             this.InitializeComponent();
+            (this.FindName("ContainingBox") as Panel).Background = new SolidColorBrush(Color.FromArgb(255, 255 / 2, 255 / 2, 255 / 2));
+            this.DisplayItemManager = new PositionalDisplayItemManager(this.FindName("MapCanvas") as Canvas, this.FindName("ContainingBox") as System.Windows.Controls.Panel);
             this.ProgramManager = new ProgramManager(this);
+
             InputManager.Current.PreProcessInput += (sender, e) =>
             {
                 if (e.StagingItem.Input is MouseButtonEventArgs)
                     GlobalClickEventHandler(sender,
                       (MouseButtonEventArgs)e.StagingItem.Input);
             };
+            SetupKeys();
         }
-        private double recentScale = 1;
-        private double recentVOffset = 0;
-        private double recentHOffset = 0;
-        public void AddDisplayItem(IDisplayable item)
+        private void SetupKeys()
         {
-            DisplayedItems.Add(item);
-            item.SubsricbeDisplayChanged(this);
-            item.SetPanel(this.FindName("MapCanvas") as Canvas);
-            item.SetScale(recentScale, recentHOffset, recentVOffset);
-            item.StartDisplay();
-            HearDisplayChanged();
+            KeyPressed[Key.Up] = false;
+            KeyPressed[Key.Down] = false;
+            KeyPressed[Key.Left] = false;
+            KeyPressed[Key.Right] = false;
+            KeyPressed[Key.F1] = false;
+            KeyPressed[Key.F2] = false;
+            KeyPressed[Key.F3] = false;
         }
-        public void RemoveDisplayedItem(IDisplayable item)
-        {
-            DisplayedItems.Remove(item);
-            item.UnsubsricbeDisplayChanged(this);
-            item.StopDisplaying();
-            HearDisplayChanged();
-        }
-        private double GenerateScale()
-        {
-            var windowWidth = this.Width;
-            var windowHeight = this.Height;
-            if (windowWidth == 0 || windowHeight == 0)
-            {
-                windowWidth = 1;
-                windowHeight = 1;
-            }
-            double leftMost = double.MaxValue;
-            double rightMost = double.MinValue;
-            double topMost = double.MaxValue;
-            double bottomMost = double.MinValue;
-            double maxWidth = 0;
-            double maxHeight = 0;
-            foreach (IDisplayable item in DisplayedItems)
-            {
-                var itemLeft = item.LeftMostPosition();
-                var itemRight = item.RightMostPosition();
-                var itemTop = item.TopMostPosition();
-                var itemBottom = item.BottomMostPosition();
-                leftMost = itemLeft < leftMost ? itemLeft : leftMost;
-                rightMost = itemRight > rightMost ? itemRight : rightMost;
-                topMost = itemTop < topMost ? itemTop : topMost;
-                bottomMost = itemBottom > bottomMost ? itemBottom : bottomMost;
-                maxWidth = rightMost - leftMost;
-                maxHeight = bottomMost - topMost;
-            }
-            var horizontalScale = windowWidth / maxWidth;
-            var verticalScale = windowHeight / maxHeight;
 
-            var scale = horizontalScale < verticalScale ? horizontalScale : verticalScale;
-            return scale;
-        }
-        private Vector2d<double> GenerateOffset()
-        {
-            double topMost = double.MaxValue;
-            double leftMost = double.MaxValue;
-            foreach (IDisplayable item in DisplayedItems)
-            {
-                if (item.TopMostPosition() < topMost)
-                    topMost = item.TopMostPosition();
-                if (item.LeftMostPosition() < leftMost)
-                    leftMost = item.LeftMostPosition();
-            }
-            return new Vector2d<double>(new double[] { leftMost, topMost, 0, 0 });
-        }
-        private void UpdateDisplay()
-        {
-            foreach (IDisplayable item in DisplayedItems)
-            {
-                item.SetScale(recentScale, recentHOffset, recentVOffset);
-                item.UpdateDisplay();
-            }
-        }
         private void CurrentWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            HearDisplayChanged();
-        }
-        public void HearDisplayChanged()
-        {
-            //if (!(this.ProgramManager is null) && !(this.ProgramManager.Robot is null))
-            //    this.ProgramManager.Robot.BringToFront();
-            var offset = GenerateOffset();
-            var scale = GenerateScale();
-            if (offset[0] != recentHOffset || offset[1] != recentVOffset || recentScale != scale)
-            {
-                this.recentScale = scale;
-                this.recentVOffset = offset[1];
-                this.recentHOffset = offset[0];
-                UpdateDisplay();
-            }
+            DisplayItemManager.DisplayItemDimensionsChanged();
         }
 
 
@@ -123,61 +56,27 @@ namespace Capstone
             if (e.ClickCount == 2)
             {
                 ProgramManager.MoveRobotToPoint(GetClickedPoint(e));
-                //DisplayPath(e);
             }
         }
-        private async void DisplayPath(MouseButtonEventArgs e)
-        {
-            StopDisplayingPaths();
-            var point = GetClickedPoint(e);
-            Debug.WriteLine($"Finding path to {point}");
-            var path = await ProgramManager.PathFromRobotToPoint(point);
-            //Debug.WriteLine(point);
-            if (path is null)
-            {
-                Debug.WriteLine("There is not a path to that point");
-            }
-            else
-            {
-                Debug.WriteLine("Displaying Path");
-                AddDisplayItem(path);
-            }
-        }
-        private void StopDisplayingPaths()
-        {
-            for (int i = 0; i < DisplayedItems.Count; i++)
-            {
-                if (DisplayedItems[i] is NetworkPath)
-                {
-                    RemoveDisplayedItem(DisplayedItems[i]);
-                    i--;
-                }
-            }
-        }
-
 
         private Vector2d<double> GetClickedPoint(MouseButtonEventArgs e)
         {
             var point = e.GetPosition((this.FindName("MapCanvas") as Canvas));
-            return new Vector2d<double>(new double[] { (point.X / recentScale) + recentHOffset, (point.Y / recentScale) + recentVOffset });
+            return new Vector2d<double>(new double[] { (point.X / DisplayItemManager.Scale) + DisplayItemManager.DisplayOffset.HorizontalOffset, (point.Y / DisplayItemManager.Scale) + DisplayItemManager.DisplayOffset.VerticalOffset });
         }
 
 
-        private bool UpIsPressed { get; set; }
-        private bool DownIsPressed { get; set; }
-        private bool LeftIsPressed { get; set; }
-        private bool RightIsPressed { get; set; }
-        private bool F1IsPressed { get; set; }
+
         private void UpdateMovementState()
         {
             MovementCommandState state = MovementCommandState.NEUTRAL;
-            if (UpIsPressed ^ DownIsPressed)
+            if (KeyPressed[Key.Up] ^ KeyPressed[Key.Down])
             {
-                state = UpIsPressed ? MovementCommandState.FORWARD : MovementCommandState.REVERSE;
+                state = KeyPressed[Key.Up] ? MovementCommandState.FORWARD : MovementCommandState.REVERSE;
             }
-            else if (LeftIsPressed ^ RightIsPressed)
+            else if (KeyPressed[Key.Left] ^ KeyPressed[Key.Right])
             {
-                state = LeftIsPressed ? MovementCommandState.LEFT : MovementCommandState.RIGHT;
+                state = KeyPressed[Key.Left] ? MovementCommandState.LEFT : MovementCommandState.RIGHT;
 
             }
             Debug.WriteLine($"Set movement state to {state}");
@@ -185,69 +84,48 @@ namespace Capstone
         }
         void CoreWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            bool F1wasPressed = F1IsPressed;
-            bool UpWasPressed = UpIsPressed;
-            bool DownWasPressed = DownIsPressed;
-            bool LeftWasPressed = LeftIsPressed;
-            bool RightWasPressed = RightIsPressed;
-            switch (e.Key)
-            {
-                case Key.Left:
-                    LeftIsPressed = true;
-                    break;
-                case Key.Up:
-                    UpIsPressed = true;
-                    break;
-                case Key.Right:
-                    RightIsPressed = true;
-                    break;
-                case Key.Down:
-                    DownIsPressed = true;
-                    break;
-                case Key.F1:
-                    F1IsPressed = true;
-                    break;
-            }
-            if (!F1wasPressed && F1IsPressed)
+            var wasPressed = false;
+            if (KeyPressed.ContainsKey(e.Key))
+                wasPressed = KeyPressed[e.Key];
+            KeyPressed[e.Key] = true;
+            if (e.Key == Key.F1 && !wasPressed)
                 ShowArcConfidenceSegments();
-            if (UpWasPressed != UpIsPressed || DownWasPressed != DownIsPressed || LeftWasPressed != LeftIsPressed || RightWasPressed != RightIsPressed)
+            else if (e.Key == Key.F2 && !wasPressed)
+                SaveObstacleSurface();
+            else if (e.Key == Key.F3 && !wasPressed)
+                LoadObstacleSurface();
+            else if (!wasPressed && (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right))
             {
                 UpdateMovementState();
             }
         }
         void CoreWindow_KeyUp(object sender, KeyEventArgs e)
         {
-            bool F1WasPressed = F1IsPressed;
-            bool UpWasPressed = UpIsPressed;
-            bool DownWasPressed = DownIsPressed;
-            bool LeftWasPressed = LeftIsPressed;
-            bool RightWasPressed = RightIsPressed;
-            switch (e.Key)
-            {
-                case Key.Left:
-                    LeftIsPressed = false;
-                    break;
-                case Key.Up:
-                    UpIsPressed = false;
-                    break;
-                case Key.Right:
-                    RightIsPressed = false;
-                    break;
-                case Key.Down:
-                    DownIsPressed = false;
-                    break;
-                case Key.F1:
-                    F1IsPressed = false;
-                    break;
-            }
-            if (F1WasPressed && !F1IsPressed)
+            var wasPressed = KeyPressed[e.Key];
+            KeyPressed[e.Key] = false;
+
+            if (e.Key == Key.F1 && wasPressed)
             {
                 HideArcSegments();
             }
-            if (UpWasPressed != UpIsPressed || DownWasPressed != DownIsPressed || LeftWasPressed != LeftIsPressed || RightWasPressed != RightIsPressed)
+            if (wasPressed && (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right))
             {
                 UpdateMovementState();
             }
+        }
+        private void LoadObstacleSurface()
+        {
+            Debug.WriteLine("Loading Obstacle Surface");
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+            {
+                ProgramManager.LoadObstacleSurface(openFileDialog.FileName);
+            }
+        }
+        private void SaveObstacleSurface()
+        {
+            Debug.WriteLine("Saving Obstacle Surface");
+            ProgramManager.SaveObstacleSurface();
         }
         private void ShowArcConfidenceSegments()
         {
@@ -255,38 +133,30 @@ namespace Capstone
             //HideArcConfidenceSegments();
             if (!(ProgramManager.Robot.USSensor.GetCurrentReading() is null))
             {
-                var arcs = ProgramManager.ContructedMap.ObstacleSurface.GetConfidenceArcSegmants((ProgramManager.Robot.USSensor.GetCurrentReading() as RangeReading).SensorPosition, ProgramManager.Robot.USSensor.SensorFalloffDistance / 2);
+                var arcs = ProgramManager.SurfaceUpdater.ObstacleSurface.GetConfidenceArcSegmants((ProgramManager.Robot.USSensor.GetCurrentReading() as RangeReading).SensorPosition, ProgramManager.Robot.USSensor.SensorFalloffDistance / 2);
                 //Debug.WriteLine($"Recived {arcs.Count} arc segmants");
                 foreach (var arc in arcs)
                 {
 
-                    AddDisplayItem(arc);
+                    arc.GetDisplayer().StartDisplaying();
                 }
             }
         }
         public void HideArcSegments()
         {
-            //Debug.WriteLine("Hiding arc segmants");
-            for (int i = 0; i < DisplayedItems.Count; i++)
-            {
-                if (DisplayedItems[i] is ArcSegment)
-                {
-                    RemoveDisplayedItem(DisplayedItems[i]);
-                    i--;
-                }
-            }
+            DisplayItemManager.StopDisplayingItemsOfType<ArcConfidenceDisplayer>();
         }
         public void HideMoveToDestinationPath()
         {
             //Debug.WriteLine("Hiding arc segmants");
-            for (int i = 0; i < DisplayedItems.Count; i++)
-            {
-                if (DisplayedItems[i] is MoveToDestinationController)
-                {
-                    RemoveDisplayedItem(DisplayedItems[i]);
-                    i--;
-                }
-            }
+            //for (int i = 0; i < DisplayedItems.Count; i++)
+            //{
+            //    if (DisplayedItems[i] is MoveToDestinationController)
+            //    {
+            //        RemoveDisplayedItem(DisplayedItems[i]);
+            //        i--;
+            //    }
+            //}
         }
 
     }

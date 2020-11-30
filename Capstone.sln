@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RobotCommunicationTestApp", "RobotCommunicationTestApp\RobotCommunicationTestApp.csproj", "{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AreaNavigation", "GuttedWorkingBluetooth\AreaNavigation.csproj", "{0B140421-4421-4673-972F-7FFB6268F0DC}"
 EndProject
 Global
@@ -21,26 +19,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|ARM.Build.0 = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|x64.Build.0 = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Debug|x86.Build.0 = Debug|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|Any CPU.Build.0 = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|ARM.ActiveCfg = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|ARM.Build.0 = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|ARM64.Build.0 = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|x64.ActiveCfg = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|x64.Build.0 = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|x86.ActiveCfg = Release|Any CPU
-		{71E9C09F-F114-4FF5-AAC2-8BD46DE16909}.Release|x86.Build.0 = Release|Any CPU
 		{0B140421-4421-4673-972F-7FFB6268F0DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0B140421-4421-4673-972F-7FFB6268F0DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B140421-4421-4673-972F-7FFB6268F0DC}.Debug|ARM.ActiveCfg = Debug|Any CPU
