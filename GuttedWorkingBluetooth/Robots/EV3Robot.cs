@@ -7,7 +7,7 @@ namespace RoboticNavigation.Robots
     {
 
 
-        public EV3Robot() : base(0, 0, 0, 0, 0, 0, 0, 0)
+        public EV3Robot() : base(5, 6, 0.1, System.Math.PI / 90, 3, 0.1, 0.1, 5)
         {
             this.Gyro = new GyroscopeSensor();
             this.LeftMotor = new RotationSensor(true, 0, 1.5);

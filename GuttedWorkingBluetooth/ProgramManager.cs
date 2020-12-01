@@ -42,38 +42,33 @@ namespace RoboticNavigation
             ActiveControl = new MoveToDestinationController(this.Robot, this.Surface, point);
             ActiveControl.CallOnMovementFinished += MovedToPoint;
             ActiveControl.Execute();
+            //MoveDistanceTest(point);
+            //MoveToAngleTest(point);
         }
         private void MoveToExploreArcTest(Vector2d<double> point)
         {
-            if (!(ActiveControl is null))
-            {
-                ActiveControl.Abort();
-
-            }
-            Page.HideMoveToDestinationPath();
             var arc = Robot.GetArcSegmantToFitRobotInDirection((point - Robot.Position).Angle());
-            var move = new MoveToExploreArcController(this.Robot, this.Surface, arc);
-            move.CallOnMovementFinished += MovedToPoint;
-            ActiveControl = move;
-            move.Execute();
+            ActiveControl = new MoveToExploreArcController(this.Robot, this.Surface, arc);
+            ActiveControl.CallOnMovementFinished += MovedToPoint;
+            ActiveControl.Execute();
         }
         private void MoveToAngleTest(Vector2d<double> point)
         {
-            var move = new MoveToAngleController(this.Robot, (point - Robot.Position).Angle());
-            move.CallOnMovementFinished += MovedToPoint;
-            move.Execute();
+            ActiveControl = new MoveToAngleController(this.Robot, (point - Robot.Position).Angle());
+            ActiveControl.CallOnMovementFinished += MovedToPoint;
+            ActiveControl.Execute();
         }
         private void MoveDistanceTest(Vector2d<double> point)
         {
-            var move = new MoveDistanceController(this.Robot, this.Surface, (point - Robot.Position).Magnitude());
-            move.CallOnMovementFinished += MovedToPoint;
-            move.Execute();
+            ActiveControl = new MoveDistanceController(this.Robot, this.Surface, (point - Robot.Position).Magnitude(), true);
+            ActiveControl.CallOnMovementFinished += MovedToPoint;
+            ActiveControl.Execute();
         }
         private void MoveDirectlyToPointTest(Vector2d<double> point)
         {
-            var move = new MoveDirectlyToPositionController(this.Robot, this.Surface, point);
-            move.CallOnMovementFinished += MovedToPoint;
-            move.Execute();
+            ActiveControl = new MoveDirectlyToPositionController(this.Robot, this.Surface, point);
+            ActiveControl.CallOnMovementFinished += MovedToPoint;
+            ActiveControl.Execute();
         }
 
         private void MovedToPoint(MovementControl mc)

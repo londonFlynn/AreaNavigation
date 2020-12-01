@@ -14,9 +14,12 @@ namespace RoboticNavigation.MovementControls
         private Vector2d<double> LastPosition;
         private Vector2d<double> StartingPosition;
         public const double AccecptibleMarginOfError = 1;
-        public MoveDistanceController(Robot robot, ObstacleSurface surface, double distance) : base(robot, surface)
+        public PIDMotorController PIDController;
+        private bool TestMode = false;
+        public MoveDistanceController(Robot robot, ObstacleSurface surface, double distance, bool test = false) : base(robot, surface)
         {
             this.TargetDistance = distance;
+            this.TestMode = test;
         }
         public override void Execute()
         {
@@ -27,7 +30,8 @@ namespace RoboticNavigation.MovementControls
             if (!HasMovedDistance())
             {
                 Robot.SubscribeToRobotPositionChange(this);
-                Robot.MovementCommandState = MovementDirection.FORWARD;
+                this.PIDController = Robot.GeneratePIDControllerForDirection(MovementDirection.FORWARD, TargetDistance, PIDCompleted);
+                this.PIDController.Execute();
             }
             else
             {
@@ -35,12 +39,21 @@ namespace RoboticNavigation.MovementControls
             }
 
         }
+        private void PIDCompleted(PIDMotorController pid)
+        {
+            CompletedSuccessfully = true;
+            Abort();
+        }
         private bool HasMovedDistance()
         {
             return CurrentDistance + AccecptibleMarginOfError > TargetDistance;
         }
         public override void Abort()
         {
+            if (!(PIDController is null))
+            {
+                PIDController.Abort();
+            }
             CompletedSuccessfully = HasMovedDistance();
             Robot.UnsubscribeToRobotPositionChange(this);
             if (CompletedSuccessfully)
@@ -70,7 +83,14 @@ namespace RoboticNavigation.MovementControls
                 {
                     ConfidenceFailure = true;
                 }
-                Abort();
+                if (ConfidenceFailure && TestMode)
+                {
+                    ConfidenceFailure = false;
+                }
+                else
+                {
+                    Abort();
+                }
             }
 
         }

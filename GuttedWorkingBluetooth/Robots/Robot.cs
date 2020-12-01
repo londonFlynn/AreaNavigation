@@ -11,22 +11,22 @@ namespace RoboticNavigation.Robots
 {
     public abstract class Robot : ISensorReadingSubsriber, IDisplayablePositionedItem
     {
-        protected readonly double TurnPercent;
+        protected readonly double TurnPorportional;
         protected readonly double TurnIntegral;
         protected readonly double TurnDerivative;
         protected readonly double TurnMarginOfError;
-        protected readonly double DistancePercent;
+        protected readonly double DistancePorportional;
         protected readonly double DistanceIntegral;
         protected readonly double DistanceDerivative;
         protected readonly double DistanceMarginOfError;
 
         public Robot(double turnPercent, double turnIntegral, double turnDerivative, double turnError, double distancePercent, double distanceIntegral, double distanceDerivative, double distanceError)
         {
-            this.TurnPercent = turnPercent;
+            this.TurnPorportional = turnPercent;
             this.TurnIntegral = turnIntegral;
             this.TurnDerivative = turnDerivative;
             this.TurnMarginOfError = turnError;
-            this.DistancePercent = distancePercent;
+            this.DistancePorportional = distancePercent;
             this.DistanceIntegral = distanceIntegral;
             this.DistanceDerivative = distanceDerivative;
             this.DistanceMarginOfError = distanceError;
@@ -130,7 +130,7 @@ namespace RoboticNavigation.Robots
             }
             return result;
         }
-        public PIDController GeneratePIDControllerForDirection(MovementDirection direction, double target, CallOnPIDFinished pIDFinished)
+        public PIDMotorController GeneratePIDControllerForDirection(MovementDirection direction, double target, CallOnPIDFinished pIDFinished)
         {
             if (direction.Equals(MovementDirection.LEFT) || direction.Equals(MovementDirection.RIGHT))
             {
@@ -145,16 +145,18 @@ namespace RoboticNavigation.Robots
                 return null;
             }
         }
-        private PIDController GenerateAnglePIDController(MovementDirection direction, double target, CallOnPIDFinished pIDFinished)
+        private PIDMotorController GenerateAnglePIDController(MovementDirection direction, double target, CallOnPIDFinished pIDFinished)
         {
-            var pid = new PIDController(this.TurnPercent, this.TurnIntegral, this.TurnDerivative, target, this.TurnMarginOfError, direction, pIDFinished, this.RoboticCommunication.CommandMove);
-            new PIDAngleUpdator(pid, this.Orientation, target, direction.Equals(MovementDirection.RIGHT));
+            var angle = Orientation.SignedAngleDifference(target);
+            angle = direction.Equals(MovementDirection.RIGHT) ? -angle : angle;
+            var angleGetter = new RobotAngleDistance(this, target, direction.Equals(MovementDirection.RIGHT));
+            var pid = new PIDMotorController(this.TurnPorportional, this.TurnIntegral, this.TurnDerivative, target, angleGetter.GetValue, this.TurnMarginOfError, direction, pIDFinished, this.RoboticCommunication.CommandMove);
             return pid;
         }
-        private PIDController GenerateDistancePIDController(MovementDirection direction, double target, CallOnPIDFinished pIDFinished)
+        private PIDMotorController GenerateDistancePIDController(MovementDirection direction, double target, CallOnPIDFinished pIDFinished)
         {
-            var pid = new PIDController(this.DistancePercent, this.DistanceIntegral, this.DistanceDerivative, target, this.DistanceMarginOfError, direction, pIDFinished, this.RoboticCommunication.CommandMove);
-            new PIDDistanceUpdator(pid, target, this.Position);
+            var distanceGetter = new RobotPositionalDistance(this, target);
+            var pid = new PIDMotorController(this.DistancePorportional, this.DistanceIntegral, this.DistanceDerivative, target, distanceGetter.GetValue, this.DistanceMarginOfError, direction, pIDFinished, this.RoboticCommunication.CommandMove);
             return pid;
         }
 

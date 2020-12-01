@@ -82,8 +82,8 @@ namespace RoboticNavigation.Robots
             }
             await brick.DirectCommand.TurnMotorAtPowerAsync(leftDrive, (int)(leftPower * 100));
             await brick.DirectCommand.TurnMotorAtPowerAsync(rightDrive, (int)(rightPower * 100));
-            //brick.BatchCommand.TurnMotorAtPowerForTime(leftDrive, (int)(leftPower * 100), 100, false);
-            //brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
+            //brick.BatchCommand.TurnMotorAtPower(leftDrive, (int)(leftPower * 100));
+            //brick.BatchCommand.TurnMotorAtPower(rightDrive, (int)(rightPower * 100));
             //await brick.BatchCommand.SendCommandAsync();
         }
         public void OnBrickChanged(object sender, BrickChangedEventArgs e)
