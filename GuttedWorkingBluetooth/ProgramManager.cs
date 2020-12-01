@@ -17,7 +17,7 @@ namespace RoboticNavigation
             this.Page = page;
             this.Robot = new EV3Robot();
             Robot.GetDisplayer().StartDisplaying();
-            this.Surface = new AdjustibleObstacleSurface(3, 100, 100);
+            this.Surface = new AdjustibleObstacleSurface(3, 150, 150);
             this.SurfaceUpdater = new ObstacleSurfaceUpdater(Robot, Surface as AdjustibleObstacleSurface);
             Surface.GetDisplayer().StartDisplaying();
         }
@@ -32,11 +32,16 @@ namespace RoboticNavigation
             //surface.GetDisplayer().StartDisplaying();
             //surface.ChangeResolution(30).GetDisplayer().StartDisplaying();
         }
+
         public void MoveRobotToPoint(Vector2d<double> point)
         {
-            var move = new MoveToDestinationController(this.Robot, this.Surface, point);
-            move.CallOnMovementFinished += MovedToPoint;
-            move.Execute();
+            if (!(ActiveControl is null))
+            {
+                ActiveControl.Abort();
+            }
+            ActiveControl = new MoveToDestinationController(this.Robot, this.Surface, point);
+            ActiveControl.CallOnMovementFinished += MovedToPoint;
+            ActiveControl.Execute();
         }
         private void MoveToExploreArcTest(Vector2d<double> point)
         {

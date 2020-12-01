@@ -5,6 +5,8 @@ using RoboticNavigation.Surface;
 using RoboticNavigation.VectorMath;
 using System;
 using System.Threading.Tasks;
+using System.Timers;
+using System.Windows;
 
 namespace RoboticNavigation.MovementControls
 {
@@ -35,6 +37,8 @@ namespace RoboticNavigation.MovementControls
         public override void Execute()
         {
             System.Diagnostics.Debug.WriteLine($"Executing move to destination {this.EndDestination} command");
+            TimeoutTime = 2000;
+            StopTimeout();
             Robot.SubscribeToRobotPositionChange(this);
             DoCalculatePath();
         }
@@ -61,7 +65,10 @@ namespace RoboticNavigation.MovementControls
                 }
                 else
                 {
-                    CurrentPath.GetDisplayer().StartDisplaying();
+                    Application.Current.Dispatcher.Invoke((Action)delegate
+                    {
+                        CurrentPath.GetDisplayer().StartDisplaying();
+                    });
                     this.PathIndex = 0;
                     GoToNextPosition();
                 }
@@ -110,14 +117,13 @@ namespace RoboticNavigation.MovementControls
         }
         public override void ReciveRobotPositionMemory(PositionOccupiedByRobotMemory mem)
         {
-            if (DateTime.Now - LastTimePositionWasChanged > TimeSpan.FromMilliseconds(2000))
+            ResetTimeout();
+        }
+        protected override void OnTimeout(Object source, ElapsedEventArgs e)
+        {
+            if (!Surface.PathIsClear(CurrentPath.ToArray(), Robot.RequiredClearWidth() / 2, MaximumObstacleConfidence) && !(ActiveMovement is null))
             {
-                LastTimePositionWasChanged = DateTime.Now;
-                if (!Surface.PathIsClear(CurrentPath.ToArray(), Robot.RequiredClearWidth() / 2, MaximumObstacleConfidence) && !(ActiveMovement is null))
-                {
-                    ActiveMovement.Abort();
-                }
-
+                ActiveMovement.Abort();
             }
         }
     }
