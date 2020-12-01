@@ -22,7 +22,7 @@ namespace RoboticNavigation.MovementControls
         {
             System.Diagnostics.Debug.WriteLine($"Executing turn to angle {AngleInRadians} command");
             LastAngle = Robot.Orientation;
-            LastTimePositionWasChanged = DateTime.Now;
+            StartTimeoutTimer();
             if (!AngleIsWithinMarginOfError())
             {
                 Robot.SubscribeToRobotPositionChange(this);
@@ -73,11 +73,7 @@ namespace RoboticNavigation.MovementControls
                 if (Robot.Orientation != LastAngle)
                 {
                     LastAngle = Robot.Orientation;
-                    LastTimePositionWasChanged = DateTime.Now;
-                }
-                if (DateTime.Now - LastTimePositionWasChanged > MovementTimeout)
-                {
-                    Abort();
+                    ResetTimeout();
                 }
             }
         }

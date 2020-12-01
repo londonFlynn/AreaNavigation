@@ -3,7 +3,6 @@ using RoboticNavigation.Robots;
 using RoboticNavigation.Sensors.SensorReadings;
 using RoboticNavigation.Surface;
 using RoboticNavigation.VectorMath;
-using System;
 
 namespace RoboticNavigation.MovementControls
 {
@@ -23,7 +22,7 @@ namespace RoboticNavigation.MovementControls
         {
             System.Diagnostics.Debug.WriteLine($"Executing move distance {TargetDistance} command");
             LastPosition = Robot.Position;
-            LastTimePositionWasChanged = DateTime.Now;
+            StartTimeoutTimer();
             this.StartingPosition = Robot.Position;
             if (!HasMovedDistance())
             {
@@ -60,12 +59,12 @@ namespace RoboticNavigation.MovementControls
             if (LastPosition != mem.Position)
             {
                 LastPosition = mem.Position;
-                LastTimePositionWasChanged = DateTime.Now;
+                ResetTimeout();
             }
             var arc1 = Robot.GetArcSegmantToFitRobotInDirection(Robot.Orientation);
             var distance = System.Math.Min(arc1.RaySegmant.Magnitude(), this.TargetDistance);
             var arc = new ArcSegment(arc1.AngleInRadians, arc1.Position, (arc1.RaySegmant / arc1.RaySegmant.Magnitude()) * distance);
-            if (Surface.GetLowestConfidneceInArcSegmant(arc) < RequiredConfidenceThreshold || Surface.GetHighestObstacleConfidenceInArcSegmant(arc) > MaximumObstacleConfidence || HasMovedDistance() || DateTime.Now - LastTimePositionWasChanged > MovementTimeout)
+            if (Surface.GetLowestConfidneceInArcSegmant(arc) < RequiredConfidenceThreshold || Surface.GetHighestObstacleConfidenceInArcSegmant(arc) > MaximumObstacleConfidence || HasMovedDistance())
             {
                 if (Surface.GetLowestConfidneceInArcSegmant(arc) < RequiredConfidenceThreshold && !HasMovedDistance())
                 {

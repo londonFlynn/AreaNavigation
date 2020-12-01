@@ -85,12 +85,17 @@ namespace RoboticNavigation.Display
         }
         public void RemoveItemDisplayer(PositionedItemDisplayer displayer)
         {
+
             if (this.ItemDisplayers.Contains(displayer))
             {
-                this.ItemDisplayers.Remove(displayer);
-                displayer.DimensionsChanged -= DisplayItemDimensionsChanged;
-                PositionedItemsCanvas.Children.Remove(displayer.RootElement);
-                DisplayItemDimensionsChanged();
+                this.PositionedItemsCanvas.Dispatcher.Invoke(() =>
+                {
+
+                    this.ItemDisplayers.Remove(displayer);
+                    displayer.DimensionsChanged -= DisplayItemDimensionsChanged;
+                    PositionedItemsCanvas.Children.Remove(displayer.RootElement);
+                    DisplayItemDimensionsChanged();
+                });
             }
         }
         public void DisplayItemDimensionsChanged()
