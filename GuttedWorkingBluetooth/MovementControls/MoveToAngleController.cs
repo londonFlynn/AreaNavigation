@@ -28,12 +28,12 @@ namespace RoboticNavigation.MovementControls
                 Robot.SubscribeToRobotPositionChange(this);
                 if (ShouldTurnRight(Robot.Orientation))
                 {
-                    Robot.MovementCommandState = MovementCommandState.RIGHT;
+                    Robot.MovementCommandState = MovementDirection.RIGHT;
                     TurningRight = true;
                 }
                 else
                 {
-                    Robot.MovementCommandState = MovementCommandState.LEFT;
+                    Robot.MovementCommandState = MovementDirection.LEFT;
                 }
             }
             else

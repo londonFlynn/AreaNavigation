@@ -69,14 +69,14 @@ namespace RoboticNavigation
 
         private void UpdateMovementState()
         {
-            MovementCommandState state = MovementCommandState.NEUTRAL;
+            MovementDirection state = MovementDirection.NEUTRAL;
             if (KeyPressed[Key.Up] ^ KeyPressed[Key.Down])
             {
-                state = KeyPressed[Key.Up] ? MovementCommandState.FORWARD : MovementCommandState.REVERSE;
+                state = KeyPressed[Key.Up] ? MovementDirection.FORWARD : MovementDirection.REVERSE;
             }
             else if (KeyPressed[Key.Left] ^ KeyPressed[Key.Right])
             {
-                state = KeyPressed[Key.Left] ? MovementCommandState.LEFT : MovementCommandState.RIGHT;
+                state = KeyPressed[Key.Left] ? MovementDirection.LEFT : MovementDirection.RIGHT;
 
             }
             Debug.WriteLine($"Set movement state to {state}");

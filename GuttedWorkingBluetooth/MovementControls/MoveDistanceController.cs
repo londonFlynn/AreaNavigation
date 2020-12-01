@@ -28,7 +28,7 @@ namespace RoboticNavigation.MovementControls
             if (!HasMovedDistance())
             {
                 Robot.SubscribeToRobotPositionChange(this);
-                Robot.MovementCommandState = MovementCommandState.FORWARD;
+                Robot.MovementCommandState = MovementDirection.FORWARD;
             }
             else
             {

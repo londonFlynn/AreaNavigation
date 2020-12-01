@@ -1,6 +1,6 @@
 ﻿namespace RoboticNavigation.MovementControls
 {
-    public enum MovementCommandState
+    public enum MovementDirection
     {
         NEUTRAL,
         FORWARD,

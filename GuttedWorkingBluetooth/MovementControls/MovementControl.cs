@@ -22,7 +22,7 @@ namespace RoboticNavigation.MovementControls
             if (!Aborted)
             {
                 this.Aborted = true;
-                Robot.MovementCommandState = MovementCommandState.NEUTRAL;
+                Robot.MovementCommandState = MovementDirection.NEUTRAL;
                 CallOnMovementFinished.DynamicInvoke(this);
             }
         }
