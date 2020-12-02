@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ApplicationConfig.cs" />
     <Compile Include="ArcSegmants\ArcSegment.cs" />
     <Compile Include="ArcSegmants\ArcSegmentConfidence.cs" />
     <Compile Include="Display\ArcConfidenceDisplayer.cs" />
