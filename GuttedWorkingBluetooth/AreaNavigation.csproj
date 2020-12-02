@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ApplicationConfig.cs" />
     <Compile Include="ArcSegmants\ArcSegment.cs" />
     <Compile Include="ArcSegmants\ArcSegmentConfidence.cs" />
     <Compile Include="Display\ArcConfidenceDisplayer.cs" />
@@ -71,11 +72,16 @@
     <Compile Include="Display\RobotDisplayer.cs" />
     <Compile Include="ImageManipulators\Converters.cs" />
     <Compile Include="ImageManipulators\ResolutionChanger.cs" />
+    <Compile Include="Robots\RobotAngleDistance.cs" />
     <Compile Include="MovementControls\MoveDistanceController.cs" />
     <Compile Include="MovementControls\MovementControl.cs" />
     <Compile Include="MovementControls\MoveToDestinationController.cs" />
     <Compile Include="MovementControls\MoveDirectlyToPositionController.cs" />
     <Compile Include="MovementControls\MoveToExploreArcController.cs" />
+    <Compile Include="MovementControls\PID.cs" />
+    <Compile Include="MovementControls\PIDMotorController.cs" />
+    <Compile Include="Robots\RobotPositionalDistance.cs" />
+    <Compile Include="Robots\RobotValueDistance.cs" />
     <Compile Include="NavNetworks\NetworkGenerator.cs" />
     <Compile Include="NavNetworks\PathTrimer.cs" />
     <Compile Include="Sensors\SensorReadings\PositionOccupiedByRobotMemory.cs" />
@@ -94,8 +100,9 @@
     <Compile Include="Sensors\ISensorReadingSubsriber.cs" />
     <Compile Include="Surface\ImagedObstacleSurface.cs" />
     <Compile Include="Surface\SurfaceImageGenerator.cs" />
+    <Compile Include="VectorMath\AngleMath.cs" />
     <Compile Include="VectorMath\LineTool.cs" />
-    <Compile Include="MovementControls\MovementCommandState.cs" />
+    <Compile Include="MovementControls\MovementDirection.cs" />
     <Compile Include="NavNetworks\NetworkNode.cs" />
     <Compile Include="Surface\AdjustibleObstacleSurface.cs" />
     <Compile Include="NavNetworks\Network.cs" />

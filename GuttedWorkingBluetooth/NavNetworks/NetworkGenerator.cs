@@ -8,7 +8,7 @@ namespace RoboticNavigation.NavNetworks
     {
         public ObstacleSurface ObstacleSurface;
         public double ClearRadius;
-        public const double ObstacleCertintyThreshold = 0.8;
+        public static double ObstacleCertintyThreshold { get { return ApplicationConfig.NetworkObstacleCertintyThreshold; } }
         public NetworkGenerator(ObstacleSurface surface, double requiredClearRadius)
         {
             this.ObstacleSurface = surface;

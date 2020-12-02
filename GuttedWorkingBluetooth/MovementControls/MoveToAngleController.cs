@@ -8,8 +8,9 @@ namespace RoboticNavigation.MovementControls
     {
         public readonly double AngleInRadians;
         private double LastAngle;
-        public const double AccecptibleMarginOfError = Math.PI / 90;
+        public double AccecptibleMarginOfError = Math.PI / 90;
         private bool TurningRight;
+        public PIDMotorController PIDController;
         public MoveToAngleController(Robot robot, double angleInRadians) : base(robot, null)
         {
             while (angleInRadians < 0)
@@ -26,20 +27,29 @@ namespace RoboticNavigation.MovementControls
             if (!AngleIsWithinMarginOfError())
             {
                 Robot.SubscribeToRobotPositionChange(this);
+                MovementDirection direction;
                 if (ShouldTurnRight(Robot.Orientation))
                 {
-                    Robot.MovementCommandState = MovementCommandState.RIGHT;
+                    direction = MovementDirection.RIGHT;
                     TurningRight = true;
                 }
                 else
                 {
-                    Robot.MovementCommandState = MovementCommandState.LEFT;
+                    direction = MovementDirection.LEFT;
                 }
+                this.PIDController = Robot.GeneratePIDControllerForDirection(direction, AngleInRadians, PIDCompleted);
+                this.AccecptibleMarginOfError = PIDController.MarginOfError;
+                this.PIDController.Execute();
             }
             else
             {
                 Abort();
             }
+        }
+        private void PIDCompleted(PIDMotorController pid)
+        {
+            CompletedSuccessfully = true;
+            Abort();
         }
         private bool ShouldTurnRight(double robotAngle)
         {
@@ -79,6 +89,10 @@ namespace RoboticNavigation.MovementControls
         }
         public override void Abort()
         {
+            if (!(PIDController is null))
+            {
+                PIDController.Abort();
+            }
             CompletedSuccessfully = CompletedSuccessfully || AngleIsWithinMarginOfError();
             Robot.UnsubscribeToRobotPositionChange(this);
             if (CompletedSuccessfully)

@@ -10,6 +10,8 @@ namespace RoboticNavigation.Robots
 {
     public class EV3Communication : RoboticCommunication
     {
+
+        public const double ReverseTurnModifier = 0.8;
         private ICommunication coms;
         EV3Robot Robot;
         private Brick brick;
@@ -55,33 +57,33 @@ namespace RoboticNavigation.Robots
             Debug.WriteLine("Sensor Setup Successful");
         }
 
-        public async override void CommandMove(MovementCommandState movementCommandState, double power)
+        public async override void CommandMove(MovementDirection movementCommandState, double power)
         {
             double leftPower = 0;
             double rightPower = 0;
             switch (movementCommandState)
             {
-                case MovementCommandState.LEFT:
+                case MovementDirection.LEFT:
                     leftPower = -power;
-                    rightPower = power;
+                    rightPower = power * ReverseTurnModifier;
                     break;
-                case MovementCommandState.RIGHT:
-                    leftPower = power;
+                case MovementDirection.RIGHT:
+                    leftPower = power * ReverseTurnModifier;
                     rightPower = -power;
                     break;
-                case MovementCommandState.FORWARD:
+                case MovementDirection.FORWARD:
                     leftPower = power;
                     rightPower = power;
                     break;
-                case MovementCommandState.REVERSE:
+                case MovementDirection.REVERSE:
                     leftPower = -power;
                     rightPower = -power;
                     break;
             }
             await brick.DirectCommand.TurnMotorAtPowerAsync(leftDrive, (int)(leftPower * 100));
             await brick.DirectCommand.TurnMotorAtPowerAsync(rightDrive, (int)(rightPower * 100));
-            //brick.BatchCommand.TurnMotorAtPowerForTime(leftDrive, (int)(leftPower * 100), 100, false);
-            //brick.BatchCommand.TurnMotorAtPowerForTime(rightDrive, (int)(rightPower * 100), 100, false);
+            //brick.BatchCommand.TurnMotorAtPower(leftDrive, (int)(leftPower * 100));
+            //brick.BatchCommand.TurnMotorAtPower(rightDrive, (int)(rightPower * 100));
             //await brick.BatchCommand.SendCommandAsync();
         }
         public void OnBrickChanged(object sender, BrickChangedEventArgs e)

@@ -6,7 +6,7 @@ namespace RoboticNavigation.ArcSegmants
     public class ArcSegmentConfidence : ArcSegment, IDisplayablePositionedItem
     {
         public double Confidence { get; set; }
-        public const double ConfidenceTreshold = 0.75;
+        public static double ConfidenceTreshold { get { return ApplicationConfig.ArcSegmantConfidenceThreshold; } }
         private ArcConfidenceDisplayer Displayer;
         public ArcSegmentConfidence(double angleInRadians, Vector2d<double> position, Vector2d<double> ray, double confidence) : base(angleInRadians, position, ray)
         {

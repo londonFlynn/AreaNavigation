@@ -9,7 +9,11 @@ namespace RoboticNavigation.Display
 {
     public class RobotDisplayer : PositionedItemDisplayer
     {
-        public RobotDisplayer(Robot item) : base(item) { }
+        private string ImageFileName;
+        public RobotDisplayer(Robot item) : base(item)
+        {
+            this.ImageFileName = item.ImageFileName;
+        }
 
         public override void ElementOnScreenPositionChanged()
         {
@@ -45,7 +49,7 @@ namespace RoboticNavigation.Display
             var image = new Image();
             var path = System.IO.Path.Combine(Environment.CurrentDirectory);
             path = System.IO.Path.GetFullPath(System.IO.Path.Combine(path, @"..\..\"));
-            path = System.IO.Path.GetFullPath(System.IO.Path.Combine(path, "Assets", "Robot.png"));
+            path = System.IO.Path.GetFullPath(System.IO.Path.Combine(path, "Assets", ImageFileName));
             var uri = new Uri(path);
             image.Source = new BitmapImage(uri);
             image.Stretch = System.Windows.Media.Stretch.Fill;

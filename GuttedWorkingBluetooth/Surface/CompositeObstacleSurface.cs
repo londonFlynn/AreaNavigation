@@ -10,6 +10,10 @@ namespace RoboticNavigation.Surface
         private double RotationRadians;
         private VectorMath.Vector2d<double> TranslationVector;
 
+        public override int Width => WidthCalculation();
+
+        public override int Height => HeightCalculation();
+
         public CompositeObstacleSurface(ObstacleSurface staticSurface, ObstacleSurface translatedSurface, double rotationInRadians, VectorMath.Vector2d<double> translationVector)
         {
             this.StaticSurface = staticSurface;
@@ -18,10 +22,6 @@ namespace RoboticNavigation.Surface
             this.TranslationVector = translationVector;
             this.CMPerPixel = staticSurface.CMPerPixel;
         }
-
-        public override int Width => WidthCalculation();
-
-        public override int Height => HeightCalculation();
 
         public override double GetPixelValue(SurfaceCoordinate cell)
         {
