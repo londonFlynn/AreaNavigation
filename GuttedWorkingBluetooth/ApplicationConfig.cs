@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 
 namespace RoboticNavigation
 {
@@ -18,14 +20,48 @@ namespace RoboticNavigation
         public static double PositionStartingSampleAdjustment { get; private set; }
         public static double PositionResampleAdjustment { get; private set; }
         public static string RobotDataFilePath { get; private set; }
-        public static int ObstacleSurfaceCMPerPixel { get; private set; }
+        public static double ObstacleSurfaceCMPerPixel { get; private set; }
         public static int ObstacleSurfaceWidth { get; private set; }
         public static int ObstacleSurfaceHeight { get; private set; }
 
         public static void Load()
         {
-            //TODO
-            DefaultConfig();
+            var path = System.IO.Path.Combine(Environment.CurrentDirectory);
+            path = System.IO.Path.GetFullPath(System.IO.Path.Combine(path, @"..\..\"));
+            path = System.IO.Path.GetFullPath(System.IO.Path.Combine(path, "Assets", "config.json"));
+            try
+            {
+                using (StreamReader r = new StreamReader(path))
+                {
+                    string json = r.ReadToEnd();
+                    dynamic config = JsonConvert.DeserializeObject(json);
+                    ParseConfig(config);
+                }
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                DefaultConfig();
+            }
+        }
+        private static void ParseConfig(dynamic config)
+        {
+            ArcSegmantConfidenceThreshold = config.ArcSegmantConfidenceThreshold;
+            DisplayFramrateMillis = config.DisplayFramrateMillis;
+            MovementRequiredConfidenceThreshold = config.MovementRequiredConfidenceThreshold;
+            MovementMaximumObstacleConfidence = config.MovementMaximumObstacleConfidence;
+            MovementTimeoutTime = config.MovementTimeoutTime;
+            NetworkObstacleCertintyThreshold = config.NetworkObstacleCertintyThreshold;
+            ObstacleSurfaceReadingRadius = config.ObstacleSurfaceReadingRadius;
+            ObstacleSurfaceReadingNegativeRadius = config.ObstacleSurfaceReadingNegativeRadius;
+            ObstacleSurfaceAngleIncriment = config.ObstacleSurfaceAngleIncriment;
+            RangeReadingStartingSampleAdjustment = config.RangeReadingStartingSampleAdjustment;
+            RangeReadingResampleAdjustment = config.RangeReadingResampleAdjustment;
+            PositionStartingSampleAdjustment = config.PositionStartingSampleAdjustment;
+            PositionResampleAdjustment = config.PositionResampleAdjustment;
+            RobotDataFilePath = config.RobotDataFilePath;
+            ObstacleSurfaceCMPerPixel = config.ObstacleSurfaceCMPerPixel;
+            ObstacleSurfaceWidth = config.ObstacleSurfaceWidth;
+            ObstacleSurfaceHeight = config.ObstacleSurfaceHeight;
         }
         public static void DefaultConfig()
         {
@@ -42,7 +78,7 @@ namespace RoboticNavigation
             RangeReadingResampleAdjustment = 7;
             PositionStartingSampleAdjustment = 1;
             PositionResampleAdjustment = 0.25;
-            RobotDataFilePath = null;
+            RobotDataFilePath = "robot.json";
             ObstacleSurfaceCMPerPixel = 3;
             ObstacleSurfaceWidth = 150;
             ObstacleSurfaceHeight = 150;

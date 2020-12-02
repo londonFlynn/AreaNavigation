@@ -1,0 +1,46 @@
+﻿{
+  "TurnPorportion": "5",
+  "TurnIntegral": "6",
+  "TurnDerivative": "0.1",
+  "TurnError": "0.034906585039887",
+  "DistancePorportion": "3",
+  "DistanceIntegral": "0.1",
+  "DistanceDerivative": "0.1",
+  "DistanceError": "5",
+  "ImageFileName": "Robot.png",
+  "Motors": {
+    "Left": {
+      "DistancePerRotation": "1.5"
+    },
+    "Right": {
+      "DistancePerRotation": "1.5"
+    }
+  },
+  "RangeSensors": [
+    {
+      "Type": "Ultrasonic",
+      "RelativeX": "5",
+      "RelativeY": "3",
+      "Falloff": "120",
+      "Port": "2"
+    }
+  ],
+  "Shape": [
+    {
+      "X": 11.5,
+      "Y": 15.3
+    },
+    {
+      "X": 11.5,
+      "Y": -15.3
+    },
+    {
+      "X": -11.5,
+      "Y": -15.3
+    },
+    {
+      "X": -11.5,
+      "Y": 15.3
+    }
+  ]
+}

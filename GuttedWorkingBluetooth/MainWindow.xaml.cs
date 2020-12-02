@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using RoboticNavigation.Display;
 using RoboticNavigation.MovementControls;
-using RoboticNavigation.Sensors.SensorReadings;
 using RoboticNavigation.VectorMath;
 using System.Diagnostics;
 using System.Windows;
@@ -129,18 +128,7 @@ namespace RoboticNavigation
         }
         private void ShowArcConfidenceSegments()
         {
-            //Debug.WriteLine("Showing arc segmants");
-            //HideArcConfidenceSegments();
-            if (!(ProgramManager.Robot.USSensor.GetCurrentReading() is null))
-            {
-                var arcs = ProgramManager.SurfaceUpdater.ObstacleSurface.GetConfidenceArcSegmants((ProgramManager.Robot.USSensor.GetCurrentReading() as RangeReading).SensorPosition, ProgramManager.Robot.USSensor.SensorFalloffDistance / 2);
-                //Debug.WriteLine($"Recived {arcs.Count} arc segmants");
-                foreach (var arc in arcs)
-                {
-
-                    arc.GetDisplayer().StartDisplaying();
-                }
-            }
+            ProgramManager.ShowArcConfidenceSegments();
         }
         public void HideArcSegments()
         {

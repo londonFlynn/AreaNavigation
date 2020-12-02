@@ -77,5 +77,23 @@ namespace RoboticNavigation
             Page.HideArcSegments();
             Page.HideMoveToDestinationPath();
         }
+        public void ShowArcConfidenceSegments()
+        {
+            System.Diagnostics.Debug.WriteLine("Showing arc segmants");
+            //HideArcConfidenceSegments();
+
+            if (Robot.RangeSensors.Count > 0)
+            {
+                var sensor = Robot.RangeSensors[0];
+                System.Diagnostics.Debug.WriteLine("Sensor exists");
+                var position = Robot.Position + sensor.RelativePosition;
+                var arcs = SurfaceUpdater.ObstacleSurface.GetConfidenceArcSegmants(position, sensor.SensorFalloffDistance / 2);
+                //Debug.WriteLine($"Recived {arcs.Count} arc segmants");
+                foreach (var arc in arcs)
+                {
+                    arc.GetDisplayer().StartDisplaying();
+                }
+            }
+        }
     }
 }
