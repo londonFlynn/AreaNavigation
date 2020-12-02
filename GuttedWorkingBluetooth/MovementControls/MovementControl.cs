@@ -10,13 +10,12 @@ namespace RoboticNavigation.MovementControls
     {
         //protected static readonly TimeSpan MovementTimeout = TimeSpan.FromMilliseconds(1000);
         private static System.Timers.Timer TimeoutTimer;
-        protected const double RequiredConfidenceThreshold = 0.75;
-        protected const double MaximumObstacleConfidence = 0.5;
-        protected const double PositionAcceptibleMarginOfError = 1;
+        protected static double RequiredConfidenceThreshold { get { return ApplicationConfig.MovementRequiredConfidenceThreshold; } }
+        protected static double MaximumObstacleConfidence { get { return ApplicationConfig.MovementMaximumObstacleConfidence; } }
         protected bool Aborted = false;
         protected Robot Robot;
         protected ObstacleSurface Surface;
-        protected int TimeoutTime = 1000;
+        protected virtual int TimeoutTime { get { return ApplicationConfig.MovementTimeoutTime; } }
         //protected DateTime LastTimePositionWasChanged;
         public bool CompletedSuccessfully { get; protected set; }
         public abstract void Execute();

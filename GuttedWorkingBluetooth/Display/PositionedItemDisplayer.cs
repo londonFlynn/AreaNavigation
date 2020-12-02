@@ -14,7 +14,7 @@ namespace RoboticNavigation.Display
         protected DisplayItemDimensions LastDimensions;
         public DimensionsChanged DimensionsChanged = delegate { };
         public bool IsDisplaying { get; private set; }
-        private int FrameRateTime = 100;
+        private static int FrameRateTime { get { return ApplicationConfig.DisplayFramrateMillis; } }
         private DateTime LastChanged = DateTime.Now;
 
         public PositionedItemDisplayer(IDisplayablePositionedItem itemToBeDisplayed)

@@ -11,9 +11,9 @@ namespace RoboticNavigation.Surface
         public double CMPerPixel { get; protected set; }
         public abstract int Width { get; }
         public abstract int Height { get; }
-        public const double ReadingRadius = 6.5;
-        public const double ReadingNegativeRadius = 6.5;
-        protected const double AngleIncriment = Math.PI / 15;
+        public static double ReadingRadius { get { return ApplicationConfig.ObstacleSurfaceReadingRadius; } }
+        public static double ReadingNegativeRadius { get { return ApplicationConfig.ObstacleSurfaceReadingNegativeRadius; } }
+        protected static double AngleIncriment { get { return ApplicationConfig.ObstacleSurfaceAngleIncriment; } }
         private ObstacleSurfaceDisplayer Displayer;
 
 

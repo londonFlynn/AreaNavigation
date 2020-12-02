@@ -19,8 +19,9 @@ namespace RoboticNavigation.Robots
         protected readonly double DistanceIntegral;
         protected readonly double DistanceDerivative;
         protected readonly double DistanceMarginOfError;
+        public readonly string ImageFileName;
 
-        public Robot(double turnPercent, double turnIntegral, double turnDerivative, double turnError, double distancePercent, double distanceIntegral, double distanceDerivative, double distanceError)
+        public Robot(double turnPercent, double turnIntegral, double turnDerivative, double turnError, double distancePercent, double distanceIntegral, double distanceDerivative, double distanceError, string imageFileName)
         {
             this.TurnPorportional = turnPercent;
             this.TurnIntegral = turnIntegral;
@@ -31,6 +32,7 @@ namespace RoboticNavigation.Robots
             this.DistanceDerivative = distanceDerivative;
             this.DistanceMarginOfError = distanceError;
             this.Position = new Vector2d<double>(new double[] { 0, 0 });
+            this.ImageFileName = imageFileName;
         }
 
         //represents the position of the axis of rotation

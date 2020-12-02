@@ -13,7 +13,7 @@ namespace RoboticNavigation.MovementControls
         private double CurrentDistance { get { return (LastPosition - StartingPosition).Magnitude(); } }
         private Vector2d<double> LastPosition;
         private Vector2d<double> StartingPosition;
-        public const double AccecptibleMarginOfError = 1;
+        public double AccecptibleMarginOfError = 1;
         public PIDMotorController PIDController;
         private bool TestMode = false;
         public MoveDistanceController(Robot robot, ObstacleSurface surface, double distance, bool test = false) : base(robot, surface)
@@ -31,6 +31,7 @@ namespace RoboticNavigation.MovementControls
             {
                 Robot.SubscribeToRobotPositionChange(this);
                 this.PIDController = Robot.GeneratePIDControllerForDirection(MovementDirection.FORWARD, TargetDistance, PIDCompleted);
+                this.AccecptibleMarginOfError = PIDController.MarginOfError;
                 this.PIDController.Execute();
             }
             else

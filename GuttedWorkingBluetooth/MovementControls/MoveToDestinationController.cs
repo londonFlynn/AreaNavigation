@@ -18,6 +18,8 @@ namespace RoboticNavigation.MovementControls
         private NetworkPath LastPath;
         private MovementControl ActiveMovement;
         private int PathIndex = 0;
+        protected override int TimeoutTime => base.TimeoutTime * 2;
+
         private NetworkPath CurrentPath
         {
             get { return _currentPath; }
@@ -37,7 +39,6 @@ namespace RoboticNavigation.MovementControls
         public override void Execute()
         {
             System.Diagnostics.Debug.WriteLine($"Executing move to destination {this.EndDestination} command");
-            TimeoutTime = 2000;
             StopTimeout();
             Robot.SubscribeToRobotPositionChange(this);
             DoCalculatePath();

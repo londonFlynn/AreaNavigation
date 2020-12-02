@@ -8,7 +8,7 @@ namespace RoboticNavigation.MovementControls
         protected double Integral { get; set; }
         protected double Derivative { get; set; }
         protected double Target { get; set; }
-        protected double MarginOfError { get; set; }
+        public double MarginOfError { get; protected set; }
         protected MovementDirection Direction;
         protected CallOnPIDFinished PIDFinished;
         protected ReceivePIDControlledMotorPower MotorPower;

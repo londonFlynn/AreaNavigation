@@ -8,7 +8,7 @@ namespace RoboticNavigation.MovementControls
     {
         public readonly double AngleInRadians;
         private double LastAngle;
-        public const double AccecptibleMarginOfError = Math.PI / 90;
+        public double AccecptibleMarginOfError = Math.PI / 90;
         private bool TurningRight;
         public PIDMotorController PIDController;
         public MoveToAngleController(Robot robot, double angleInRadians) : base(robot, null)
@@ -38,6 +38,7 @@ namespace RoboticNavigation.MovementControls
                     direction = MovementDirection.LEFT;
                 }
                 this.PIDController = Robot.GeneratePIDControllerForDirection(direction, AngleInRadians, PIDCompleted);
+                this.AccecptibleMarginOfError = PIDController.MarginOfError;
                 this.PIDController.Execute();
             }
             else

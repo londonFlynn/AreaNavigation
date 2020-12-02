@@ -42,7 +42,7 @@ namespace RoboticNavigation.Surface
             {
                 int index = Random.Next(RangeReadings.Count);
                 var reading = RangeReadings[index];
-                ObstacleSurface.MatchToRangeReading(reading, 1 / (7 + (reading.TimesSampled * reading.TimesSampled)), false);
+                ObstacleSurface.MatchToRangeReading(reading, 1 / (ApplicationConfig.RangeReadingResampleAdjustment + (reading.TimesSampled * reading.TimesSampled)), false);
                 reading.TimesSampled++;
             }
         }
@@ -51,14 +51,14 @@ namespace RoboticNavigation.Surface
             if (PosOccupied.Count > 0)
             {
                 int index = Random.Next(PosOccupied.Count);
-                ObstacleSurface.MatchToAreaEmptyReading(PosOccupied[index], 0.25, false);
+                ObstacleSurface.MatchToAreaEmptyReading(PosOccupied[index], ApplicationConfig.PositionResampleAdjustment, false);
             }
         }
 
         public void ReciveRobotPositionMemory(PositionOccupiedByRobotMemory mem)
         {
             this.PosOccupied.Add(mem);
-            ObstacleSurface.MatchToAreaEmptyReading(mem, 1);
+            ObstacleSurface.MatchToAreaEmptyReading(mem, ApplicationConfig.PositionStartingSampleAdjustment);
             mem.TimesSampled++;
         }
         public void ReciveSensorReading(Sensor sensor)
@@ -70,7 +70,7 @@ namespace RoboticNavigation.Surface
                 //reading.SetScale(scale, horizontalOffset, verticalOffset);
                 //reading.StartDisplay();
                 //RangeReadings.Add(reading);
-                ObstacleSurface.MatchToRangeReading(reading, 0.25);
+                ObstacleSurface.MatchToRangeReading(reading, ApplicationConfig.RangeReadingStartingSampleAdjustment);
                 reading.TimesSampled++;
             }
         }

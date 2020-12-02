@@ -14,10 +14,11 @@ namespace RoboticNavigation
         private MovementControl ActiveControl;
         public ProgramManager(Viewbox page)
         {
+            ApplicationConfig.Load();
             this.Page = page;
-            this.Robot = new EV3Robot();
+            this.Robot = EV3Robot.Load();
             Robot.GetDisplayer().StartDisplaying();
-            this.Surface = new AdjustibleObstacleSurface(3, 150, 150);
+            this.Surface = new AdjustibleObstacleSurface(ApplicationConfig.ObstacleSurfaceCMPerPixel, ApplicationConfig.ObstacleSurfaceWidth, ApplicationConfig.ObstacleSurfaceHeight);
             this.SurfaceUpdater = new ObstacleSurfaceUpdater(Robot, Surface as AdjustibleObstacleSurface);
             Surface.GetDisplayer().StartDisplaying();
         }
