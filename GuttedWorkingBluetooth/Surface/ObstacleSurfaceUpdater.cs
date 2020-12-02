@@ -18,8 +18,10 @@ namespace RoboticNavigation.Surface
         public ObstacleSurfaceUpdater(Robot robot, AdjustibleObstacleSurface surface)
         {
             this.Robot = robot;
-            robot.USSensor.SubsribeToNewReadings(this);
-            robot.IRSensor.SubsribeToNewReadings(this);
+            foreach (var sensor in Robot.RangeSensors)
+            {
+                sensor.SubsribeToNewReadings(this);
+            }
             robot.SubscribeToRobotPositionChange(this);
             this.ObstacleSurface = surface;
             StartRandomResamplings();

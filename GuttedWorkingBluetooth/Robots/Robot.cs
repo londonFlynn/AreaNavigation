@@ -23,6 +23,7 @@ namespace RoboticNavigation.Robots
 
         public Robot(double turnPercent, double turnIntegral, double turnDerivative, double turnError, double distancePercent, double distanceIntegral, double distanceDerivative, double distanceError, string imageFileName)
         {
+            this.RangeSensors = new List<RangeSensor>();
             this.TurnPorportional = turnPercent;
             this.TurnIntegral = turnIntegral;
             this.TurnDerivative = turnDerivative;
@@ -100,8 +101,7 @@ namespace RoboticNavigation.Robots
         public GyroscopeSensor Gyro { get; protected set; }
         public RotationSensor LeftMotor { get; protected set; }
         public RotationSensor RightMotor { get; protected set; }
-        public InfraredSensor IRSensor { get; protected set; }
-        public UltrasonicSensor USSensor { get; protected set; }
+        public List<RangeSensor> RangeSensors { get; protected set; }
         private MovementDirection _movementCommandState = MovementDirection.NEUTRAL;
         public MovementDirection MovementCommandState
         {

@@ -1,0 +1,19 @@
+﻿{
+  "ArcSegmantConfidenceThreshold": "0.75",
+  "DisplayFramrateMillis": "100",
+  "MovementRequiredConfidenceThreshold": "0.75",
+  "MovementMaximumObstacleConfidence": "0.5",
+  "MovementTimeoutTime": "1000",
+  "NetworkObstacleCertintyThreshold": "0.8",
+  "ObstacleSurfaceReadingRadius": "6.5",
+  "ObstacleSurfaceReadingNegativeRadius": "6.5",
+  "ObstacleSurfaceAngleIncriment": "0.20943951023932",
+  "RangeReadingStartingSampleAdjustment": "0.25",
+  "RangeReadingResampleAdjustment": "7",
+  "PositionStartingSampleAdjustment": "1",
+  "PositionResampleAdjustment": "0.25",
+  "RobotDataFilePath": "robot.json",
+  "ObstacleSurfaceCMPerPixel": "3",
+  "ObstacleSurfaceWidth": "150",
+  "ObstacleSurfaceHeight": "150"
+}

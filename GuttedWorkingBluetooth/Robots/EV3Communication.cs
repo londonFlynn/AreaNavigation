@@ -17,6 +17,7 @@ namespace RoboticNavigation.Robots
         private Brick brick;
         private readonly OutputPort leftDrive = OutputPort.B;
         private readonly OutputPort rightDrive = OutputPort.C;
+
         public EV3Communication(EV3Robot robot)
         {
             this.Robot = robot;
@@ -97,10 +98,10 @@ namespace RoboticNavigation.Robots
                         UpdateGyroValue(brick.Ports[(InputPort)port]);
                         break;
                     case DeviceType.Infrared:
-                        UpdateInfraredValue(brick.Ports[(InputPort)port]);
+                        UpdateRangeSensorValue(brick.Ports[(InputPort)port], (InputPort)port);
                         break;
                     case DeviceType.Ultrasonic:
-                        UpdateUltrasonicValue(brick.Ports[(InputPort)port]);
+                        UpdateRangeSensorValue(brick.Ports[(InputPort)port], (InputPort)port);
                         break;
                 }
             }
@@ -150,15 +151,6 @@ namespace RoboticNavigation.Robots
                 }
             }
         }
-        private void UpdateInfraredValue(Port port)
-        {
-            if (!(Robot.IRSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
-                Robot.IRSensor.SetRecentReading(
-                    new InfraredRangeReading(
-                        InfraredDataToCM(port.RawValue),
-                        Robot.IRSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, Robot.IRSensor.SensorFalloffDistance));
-        }
         private double InfraredDataToCM(double data)
         {
             if (data <= 38.983)
@@ -170,14 +162,28 @@ namespace RoboticNavigation.Robots
                 return 103623100 + ((14.33844 - 103623100) / (1 + Math.Pow(data / 920.7437, 4.870784)));
             }
         }
-        private void UpdateUltrasonicValue(Port port)
+        private void UpdateRangeSensorValue(Port port, InputPort inputPort)
         {
-            if (!(Robot.USSensor is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
-                Robot.USSensor.SetRecentReading(
-                    new UltrasonicRangeReading(
+            if (Robot.RangeSensorPorts.ContainsKey(inputPort) && !(Robot.RangeSensorPorts[inputPort] is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
+            {
+                var sensor = Robot.RangeSensorPorts[inputPort];
+                RangeReading reading = null;
+                if (sensor is UltrasonicSensor)
+                {
+                    reading = new UltrasonicRangeReading(
                         (port.RawValue + 0d) / 10,
-                        Robot.USSensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, Robot.USSensor.SensorFalloffDistance));
+                        sensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, sensor.SensorFalloffDistance);
+                }
+                else if (sensor is InfraredSensor)
+                {
+                    reading = new InfraredRangeReading(
+                        InfraredDataToCM(port.RawValue),
+                        sensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, sensor.SensorFalloffDistance);
+                }
+                sensor.SetRecentReading(reading);
+            }
         }
         public override void StartGettingSensorReadings(Sensor sensor)
         {
