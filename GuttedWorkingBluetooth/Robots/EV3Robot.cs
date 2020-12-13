@@ -65,6 +65,7 @@ namespace RoboticNavigation.Robots
             var pos = new Vector2d<double>(new double[] { sensorConfig.RelativeX, sensorConfig.RelativeY });
             double falloff = sensorConfig.Falloff;
             int portNum = sensorConfig.Port;
+            double angle = sensorConfig.Angle;
             InputPort port;
             switch (portNum)
             {
@@ -86,11 +87,11 @@ namespace RoboticNavigation.Robots
             RangeSensor sensor = null;
             if (((string)sensorConfig.Type).Equals("Ultrasonic"))
             {
-                sensor = new UltrasonicSensor(pos, falloff);
+                sensor = new UltrasonicSensor(pos, falloff, angle);
             }
             else if (((string)sensorConfig.Type).Equals("Infrared"))
             {
-                sensor = new InfraredSensor(pos, falloff);
+                sensor = new InfraredSensor(pos, falloff, angle);
 
             }
             robot.RangeSensors.Add(sensor);

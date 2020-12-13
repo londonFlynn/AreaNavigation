@@ -7,10 +7,12 @@ namespace RoboticNavigation.Sensors
     public abstract class RangeSensor : Sensor
     {
         public readonly double SensorFalloffDistance;
-        public RangeSensor(Vector2d<double> relativePosition, double sensorFalloff)
+        public readonly double AngleAdjustment;
+        public RangeSensor(Vector2d<double> relativePosition, double sensorFalloff, double angleAdjustment)
         {
             this.SensorFalloffDistance = sensorFalloff;
             this.RelativePosition = relativePosition;
+            this.AngleAdjustment = angleAdjustment;
         }
         protected override bool ReadingChanged(SensorReading changedReading)
         {

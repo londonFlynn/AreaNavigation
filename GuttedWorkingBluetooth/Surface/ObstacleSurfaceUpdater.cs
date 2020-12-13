@@ -28,10 +28,10 @@ namespace RoboticNavigation.Surface
         }
         private void StartRandomResamplings()
         {
-            //var timer = new System.Timers.Timer();
-            //timer.Elapsed += new ElapsedEventHandler(DoRandomResampling);
-            //timer.Interval = 50;
-            //timer.Enabled = true;
+            var timer = new System.Timers.Timer();
+            timer.Elapsed += new ElapsedEventHandler(DoRandomResampling);
+            timer.Interval = 50;
+            timer.Enabled = true;
         }
         private void DoRandomResampling(object source, ElapsedEventArgs e)
         {

@@ -153,34 +153,43 @@ namespace RoboticNavigation.Robots
         }
         private double InfraredDataToCM(double data)
         {
+            double result;
             if (data <= 38.983)
             {
-                return 20535640 + ((5.352759 - 20535640) / (1 + Math.Pow(data / 1017575, 1.320567)));
+                result = 20535640 + ((5.352759 - 20535640) / (1 + Math.Pow(data / 1017575, 1.320567)));
             }
             else
             {
-                return 103623100 + ((14.33844 - 103623100) / (1 + Math.Pow(data / 920.7437, 4.870784)));
+                result = 103623100 + ((14.33844 - 103623100) / (1 + Math.Pow(data / 920.7437, 4.870784)));
             }
+
+            return (200 * (data / 100d)) - 70;
+            return result - 20;
         }
         private void UpdateRangeSensorValue(Port port, InputPort inputPort)
         {
             if (Robot.RangeSensorPorts.ContainsKey(inputPort) && !(Robot.RangeSensorPorts[inputPort] is null) && !(Robot.Gyro.GetCurrentReading() is null) && port.RawValue > 1)
             {
                 var sensor = Robot.RangeSensorPorts[inputPort];
+                var angleAdjust = sensor.AngleAdjustment;
                 RangeReading reading = null;
                 if (sensor is UltrasonicSensor)
                 {
                     reading = new UltrasonicRangeReading(
                         (port.RawValue + 0d) / 10,
                         sensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, sensor.SensorFalloffDistance);
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians,
+                        angleAdjust,
+                        sensor.SensorFalloffDistance);
                 }
                 else if (sensor is InfraredSensor)
                 {
                     reading = new InfraredRangeReading(
                         InfraredDataToCM(port.RawValue),
                         sensor.RelativePosition.Rotate(Robot.Orientation) + Robot.Position,
-                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians, sensor.SensorFalloffDistance);
+                        (Robot.Gyro.GetCurrentReading() as GyroscopeReading).Radians,
+                        angleAdjust,
+                        sensor.SensorFalloffDistance);
                 }
                 sensor.SetRecentReading(reading);
             }
