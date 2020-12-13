@@ -18,13 +18,13 @@ namespace RoboticNavigation.Sensors.SensorReadings
             }
 
         }
-        public RangeReading(double distance, Vector2d<double> sensorPosition, double angle, double sensorFalloff)
+        public RangeReading(double distance, Vector2d<double> sensorPosition, double angle, double angleAdjustment, double sensorFalloff)
         {
             this.SensorFalloffDistance = sensorFalloff;
             this.SensorPosition = sensorPosition;
             this.Distance = distance;
             var v = new Vector2d<double>(new double[] { 0, distance, 0, 0 });
-            this.DistanceVector = v.Rotate(angle);
+            this.DistanceVector = v.Rotate(angle + angleAdjustment);
             //this.DistanceVector = new Vector<double>(new double[] { 0, distance, 0, 0 });
         }
         public override bool Equals(object obj)

@@ -5,147 +5,126 @@ namespace RoboticNavigation.MovementControls
 {
     public class PID
     {
-        #region Fields
+        private double PGain;
+        private double IGain;
+        private double DGain;
 
-        //Gains
-        private double kp;
-        private double ki;
-        private double kd;
+        private DateTime LastUpdateTime;
+        private double LastPorportialValue;
+        private double ErrorSum;
 
-        //Running Values
-        private DateTime lastUpdate;
-        private double lastPV;
-        private double errSum;
+        private GetDouble ReadPorportionalValue;
+        private GetDouble ReadSetPoint;
+        private SetDouble WriteOutputValue;
 
-        //Reading/Writing Values
-        private GetDouble readPV;
-        private GetDouble readSP;
-        private SetDouble writeOV;
+        private double PorportionalValueMax;
+        private double PorportionalValueMin;
+        private double OutputValueMax;
+        private double OutputValueMin;
 
-        //Max/Min Calculation
-        private double pvMax;
-        private double pvMin;
-        private double outMax;
-        private double outMin;
+        private double ComputeHz = 10.0f;
+        private Thread ComputeThread;
 
-        //Threading and Timing
-        private double computeHz = 1.0f;
-        private Thread runThread;
 
-        #endregion
-
-        #region Properties
-
-        public double PGain
+        public double PorpotionalGain
         {
-            get { return kp; }
-            set { kp = value; }
+            get { return PGain; }
+            set { PGain = value; }
         }
 
-        public double IGain
+        public double IntigralGain
         {
-            get { return ki; }
-            set { ki = value; }
+            get { return IGain; }
+            set { IGain = value; }
         }
 
-        public double DGain
+        public double DerivativeGain
         {
-            get { return kd; }
-            set { kd = value; }
+            get { return DGain; }
+            set { DGain = value; }
         }
 
-        public double PVMin
+        public double PorportionalMin
         {
-            get { return pvMin; }
-            set { pvMin = value; }
+            get { return PorportionalValueMin; }
+            set { PorportionalValueMin = value; }
         }
 
-        public double PVMax
+        public double PorportionalMax
         {
-            get { return pvMax; }
-            set { pvMax = value; }
+            get { return PorportionalValueMax; }
+            set { PorportionalValueMax = value; }
         }
 
-        public double OutMin
+        public double OutputMin
         {
-            get { return outMin; }
-            set { outMin = value; }
+            get { return OutputValueMin; }
+            set { OutputValueMin = value; }
         }
 
-        public double OutMax
+        public double OutputMax
         {
-            get { return outMax; }
-            set { outMax = value; }
+            get { return OutputValueMax; }
+            set { OutputValueMax = value; }
         }
 
         public bool PIDOK
         {
-            get { return runThread != null; }
+            get { return ComputeThread != null; }
         }
 
-        #endregion
 
-        #region Construction / Deconstruction
-
-        public PID(double pG, double iG, double dG,
-            double pMax, double pMin, double oMax, double oMin,
-            GetDouble pvFunc, GetDouble spFunc, SetDouble outFunc)
+        public PID(double pGain, double iGain, double dGain,
+            double porportionalMax, double porportionalMin, double outputMax, double outputMin,
+            GetDouble porportionalFunction, GetDouble setpointFunction, SetDouble outputFunction)
         {
-            kp = pG;
-            ki = iG;
-            kd = dG;
-            pvMax = pMax;
-            pvMin = pMin;
-            outMax = oMax;
-            outMin = oMin;
-            readPV = pvFunc;
-            readSP = spFunc;
-            writeOV = outFunc;
+            PGain = pGain;
+            IGain = iGain;
+            DGain = dGain;
+            PorportionalValueMax = porportionalMax;
+            PorportionalValueMin = porportionalMin;
+            OutputValueMax = outputMax;
+            OutputValueMin = outputMin;
+            ReadPorportionalValue = porportionalFunction;
+            ReadSetPoint = setpointFunction;
+            WriteOutputValue = outputFunction;
         }
 
         ~PID()
         {
             Disable();
-            readPV = null;
-            readSP = null;
-            writeOV = null;
+            ReadPorportionalValue = null;
+            ReadSetPoint = null;
+            WriteOutputValue = null;
         }
-
-        #endregion
-
-        #region Public Methods
 
         public void Enable()
         {
-            if (runThread != null)
+            if (ComputeThread != null)
                 return;
 
             Reset();
 
-            runThread = new Thread(new ThreadStart(Run));
-            runThread.IsBackground = true;
-            runThread.Name = "PID Processor";
-            runThread.Start();
+            ComputeThread = new Thread(new ThreadStart(Run));
+            ComputeThread.IsBackground = true;
+            ComputeThread.Name = "PID Processor";
+            ComputeThread.Start();
         }
 
         public void Disable()
         {
-            if (runThread == null)
+            if (ComputeThread == null)
                 return;
 
-            runThread.Abort();
-            runThread = null;
+            ComputeThread.Abort();
+            ComputeThread = null;
         }
 
         public void Reset()
         {
-            errSum = 0.0f;
-            lastUpdate = DateTime.Now;
+            ErrorSum = 0.0f;
+            LastUpdateTime = DateTime.Now;
         }
-
-        #endregion
-
-        #region Private Methods
 
         private double ScaleValue(double value, double valuemin,
                 double valuemax, double scalemin, double scalemax)
@@ -158,7 +137,7 @@ namespace RoboticNavigation.MovementControls
             return retVal;
         }
 
-        private double Clamp(double value, double min, double max)
+        private double ClampValueToWithinMinAndMax(double value, double min, double max)
         {
             if (value > max)
                 return max;
@@ -169,61 +148,52 @@ namespace RoboticNavigation.MovementControls
 
         private void Compute()
         {
-            if (readPV == null || readSP == null || writeOV == null)
+            if (ReadPorportionalValue == null || ReadSetPoint == null || WriteOutputValue == null)
                 return;
 
-            double pv = readPV();
-            double sp = readSP();
+            double porportionalValue = ReadPorportionalValue();
+            double setPoint = ReadSetPoint();
 
-            //We need to scale the pv to +/- 100%, but first clamp it
-            pv = Clamp(pv, pvMin, pvMax);
-            pv = ScaleValue(pv, pvMin, pvMax, -1.0f, 1.0f);
+            porportionalValue = ClampValueToWithinMinAndMax(porportionalValue, PorportionalValueMin, PorportionalValueMax);
+            porportionalValue = ScaleValue(porportionalValue, PorportionalValueMin, PorportionalValueMax, -1.0f, 1.0f);
 
-            //We also need to scale the setpoint
-            sp = Clamp(sp, pvMin, pvMax);
-            sp = ScaleValue(sp, pvMin, pvMax, -1.0f, 1.0f);
+            setPoint = ClampValueToWithinMinAndMax(setPoint, PorportionalValueMin, PorportionalValueMax);
+            setPoint = ScaleValue(setPoint, PorportionalValueMin, PorportionalValueMax, -1.0f, 1.0f);
 
-            //Now the error is in percent...
-            double err = sp - pv;
+            double error = setPoint - porportionalValue;
 
-            double pTerm = err * kp;
+            double pTerm = error * PGain;
             double iTerm = 0.0f;
             double dTerm = 0.0f;
 
             double partialSum = 0.0f;
             DateTime nowTime = DateTime.Now;
 
-            if (lastUpdate != null)
+            if (LastUpdateTime != null)
             {
-                double dT = (nowTime - lastUpdate).TotalSeconds;
+                double dT = (nowTime - LastUpdateTime).TotalSeconds;
 
-                //Compute the integral if we have to...
-                if (pv >= pvMin && pv <= pvMax)
+                if (porportionalValue >= PorportionalValueMin && porportionalValue <= PorportionalValueMax)
                 {
-                    partialSum = errSum + dT * err;
-                    iTerm = ki * partialSum;
+                    partialSum = ErrorSum + dT * error;
+                    iTerm = IGain * partialSum;
                 }
 
                 if (dT != 0.0f)
-                    dTerm = kd * (pv - lastPV) / dT;
+                    dTerm = DGain * (porportionalValue - LastPorportialValue) / dT;
             }
 
-            lastUpdate = nowTime;
-            errSum = partialSum;
-            lastPV = pv;
-            //Now we have to scale the output value to match the requested scale
+            LastUpdateTime = nowTime;
+            ErrorSum = partialSum;
+            LastPorportialValue = porportionalValue;
             double outReal = pTerm + iTerm + dTerm;
 
-            outReal = Clamp(outReal, -1.0f, 1.0f);
-            outReal = ScaleValue(outReal, -1.0f, 1.0f, outMin, outMax);
+            outReal = ClampValueToWithinMinAndMax(outReal, -1.0f, 1.0f);
+            outReal = ScaleValue(outReal, -1.0f, 1.0f, OutputValueMin, OutputValueMax);
 
-            //Write it out to the world
-            writeOV(outReal);
+            WriteOutputValue(outReal);
         }
 
-        #endregion
-
-        #region Threading
 
         private void Run()
         {
@@ -231,7 +201,7 @@ namespace RoboticNavigation.MovementControls
             {
                 try
                 {
-                    int sleepTime = (int)(100 / computeHz);
+                    int sleepTime = (int)(1000 / ComputeHz);
                     Thread.Sleep(sleepTime);
                     Compute();
                 }
@@ -242,7 +212,6 @@ namespace RoboticNavigation.MovementControls
             }
         }
 
-        #endregion
     }
     public delegate double GetDouble();
     public delegate void SetDouble(double value);

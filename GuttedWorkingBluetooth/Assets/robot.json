@@ -22,8 +22,18 @@
       "RelativeX": "5",
       "RelativeY": "3",
       "Falloff": "120",
-      "Port": "2"
+      "Port": "2",
+      "Angle": "0"
     }
+    //,
+    //{
+    //  "Type": "Infrared",
+    //  "RelativeX": "-5",
+    //  "RelativeY": "3",
+    //  "Falloff": "70",
+    //  "Port": "3",
+    //  "Angle": "0"
+    //}
   ],
   "Shape": [
     {
